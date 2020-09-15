@@ -1,0 +1,12 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    bind:
+      $rootDir: '%kernel.project_dir%'
+
+
+  HeimrichHannot\TwigSupportBundle\EventListener\RenderListener:
+    public: true
+
+  HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator: ~

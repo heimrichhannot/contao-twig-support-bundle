@@ -1,0 +1,21 @@
+{
+  "name": "heimrichhannot/contao-twig-support-bundle",
+  "type": "contao-bundle",
+  "description": "This bundle add twig template support to contao",
+  "license": "LGPL-3.0-or-later",
+  "require": {
+    "php": "^7.2",
+    "contao/core-bundle": "^4.4",
+    "symfony/http-kernel": "^3.4|^4.4",
+    "symfony/finder": "^3.4|^4.4",
+    "twig/twig": "^1.26|^2.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "HeimrichHannot\\TwigSupportBundle\\": "src/"
+    }
+  },
+  "extra": {
+    "contao-manager-plugin": "HeimrichHannot\\TwigSupportBundle\\ContaoManager\\Plugin"
+  }
+}
