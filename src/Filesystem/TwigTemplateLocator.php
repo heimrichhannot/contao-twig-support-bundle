@@ -37,33 +37,29 @@ class TwigTemplateLocator
     /**
      * Return a twig template path by template name (without or with extension).
      *
-     * @param string $name
-     * @param bool $disableCache
-     * @return string
-     * @throws \Exception
+     * @throws TemplateNotFoundException
      */
     public function getTemplatePath(string $name, bool $disableCache = false): string
     {
-        if (($templates = $this->getTemplates(false, $disableCache)) && array_key_exists($name, $templates)) {
+        if (($templates = $this->getTemplates(false, $disableCache)) && \array_key_exists($name, $templates)) {
             return $templates[$name];
-        } elseif (($templates = $this->getTemplates(true, $disableCache)) && array_key_exists($name, $templates)) {
+        } elseif (($templates = $this->getTemplates(true, $disableCache)) && \array_key_exists($name, $templates)) {
             return $templates[$name];
         }
+
         throw new TemplateNotFoundException(sprintf('Unable to find template "%s".', $name));
     }
 
     /**
-     * Return a list of all twig templates and their paths
+     * Return a list of all twig templates and their paths.
      *
-     * @param bool $extension
-     * @param bool $disableCache
-     * @return array
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function getTemplates(bool $extension = false, bool $disableCache = false): array
     {
         if ('dev' !== $this->kernel->getEnvironment() && !$disableCache) {
             $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
+
             if ($extension) {
                 $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
             }
@@ -73,10 +69,44 @@ class TwigTemplateLocator
             if (!$cache->has($cacheKey)) {
                 $cache->set($cacheKey, $this->getTwigTemplatePaths(false));
             }
+
             return $cache->get($cacheKey);
-        } else {
-            return $this->getTwigTemplatePaths(false);
         }
+
+        return $this->getTwigTemplatePaths(false);
+    }
+
+    /**
+     * @param iterable|string $dir
+     */
+    public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
+    {
+        if (is_iterable($dir)) {
+            $files = $dir;
+        } elseif (\is_string($dir)) {
+            $files = (new Finder())->in($dir)->files()->name('*.twig')->getIterator();
+        } else {
+            throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
+        }
+
+        $twigFiles = [];
+
+        foreach ($files as $file) {
+            /** @var SplFileInfo $file */
+            $name = $file->getBasename();
+
+            if (!$extension) {
+                $name = Path::getFilenameWithoutExtension($name, '.html.twig');
+            }
+
+            if (!$twigKey) {
+                $twigFiles[$name] = Path::makeRelative($file->getRealPath(), $this->kernel->getProjectDir().'/templates');
+            } else {
+                $twigFiles[$name] = "@$twigKey/".$file->getRelativePathname();
+            }
+        }
+
+        return $twigFiles;
     }
 
     /**
@@ -111,39 +141,6 @@ class TwigTemplateLocator
         // Project template folder
         $twigFiles = array_merge($twigFiles, $this->getTwigTemplatesInPath(
             $this->kernel->getProjectDir().'/templates', null, $extension));
-
-        return $twigFiles;
-    }
-
-    /**
-     * @param iterable|string $dir
-     */
-    public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
-    {
-        if (is_iterable($dir)) {
-            $files = $dir;
-        } elseif (\is_string($dir)) {
-            $files = (new Finder())->in($dir)->files()->name('*.twig')->getIterator();
-        } else {
-            throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
-        }
-
-        $twigFiles = [];
-
-        foreach ($files as $file) {
-            /** @var SplFileInfo $file */
-            $name = $file->getBasename();
-
-            if (!$extension) {
-                $name = Path::getFilenameWithoutExtension($name, '.html.twig');
-            }
-
-            if (!$twigKey) {
-                $twigFiles[$name] = Path::makeRelative($file->getRealPath(), $this->kernel->getProjectDir().'/templates');
-            } else {
-                $twigFiles[$name] = "@$twigKey/".$file->getRelativePathname();
-            }
-        }
 
         return $twigFiles;
     }

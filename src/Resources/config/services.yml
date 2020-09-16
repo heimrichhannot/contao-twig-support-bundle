@@ -10,6 +10,6 @@ services:
   HeimrichHannot\TwigSupportBundle\EventListener\RenderListener:
     public: true
 
-  HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator: ~
+  HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator: ~
 
   HeimrichHannot\TwigSupportBundle\Cache\TemplateCache: ~
