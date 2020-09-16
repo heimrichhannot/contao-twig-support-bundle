@@ -16,6 +16,7 @@ use Contao\CoreBundle\Config\ResourceFinderInterface;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Webmozart\PathUtil\Path;
 
 class TemplateLocator
 {
@@ -39,12 +40,10 @@ class TemplateLocator
      *
      * @return array
      */
-    public function getTwigTemplatePaths()
+    public function getTwigTemplatePaths(bool $extension = false)
     {
         $bundles = $this->kernel->getBundles();
         $twigFiles = [];
-
-        $folders = [];
 
         if (\is_array($bundles)) {
             foreach (array_reverse($bundles) as $key => $value) {
@@ -55,65 +54,55 @@ class TemplateLocator
                 if (!is_dir($dir)) {
                     continue;
                 }
-                $finder = new Finder();
                 $twigKey = preg_replace('/Bundle$/', '', $key);
 
-                foreach ($finder->in($dir)->files()->name('*.twig') as $file) {
-                    /** @var SplFileInfo $file */
-                    $name = $file->getBasename();
-                    $legacyName = false !== strpos($name, 'html.twig') ? $file->getBasename('.html.twig') : $name;
-
-                    if (isset($this->twigFiles[$name])) {
-                        continue;
-                    }
-
-                    $twigFiles[$name] = "@$twigKey/".$file->getRelativePathname();
-
-                    if ($legacyName !== $name) {
-                        $twigFiles[$legacyName] = $twigFiles[$name];
-                    }
-                }
+                $twigFiles = array_merge($twigFiles, $this->getTwigTemplatesInPath($dir, $twigKey, $extension));
             }
         }
 
-        $twigFiles = $this->getTwigTemplatesInPaths([
-            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(),
-            $this->kernel->getProjectDir().'/templates'
-        ],
-            $twigFiles
-        );
+        // Bundle template folders
+        $twigFiles = array_merge($twigFiles, $this->getTwigTemplatesInPath(
+            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(), null, $extension));
+
+        // Project template folder
+        $twigFiles = array_merge($twigFiles, $this->getTwigTemplatesInPath(
+            $this->kernel->getProjectDir().'/templates', null, $extension));
 
         return $twigFiles;
     }
 
     /**
-     * @param array $paths Contains folder paths or finder result iterables
+     * @param iterable|string $dir
+     * @param string|null $twigKey
+     * @param bool $extension
      * @return array
      */
-    public function getTwigTemplatesInPaths(array $paths, array $twigFiles = []): array
+    public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
     {
-        foreach ($paths as $path) {
-            if (is_iterable($path)) {
-                $templateFolderFiles = $path;
-            } elseif (is_string($path)) {
-                $templateFolderFiles = (new Finder())->in($path)->name('*.twig')->getIterator();
-            } else {
-                throw new \InvalidArgumentException("Template paths entry must be a folder (string) or an iterable");
-            }
-
-            foreach ($templateFolderFiles as $file) {
-                $name = $file->getBasename();
-                $legacyName = false !== strpos($name, 'html.twig') ? $file->getBasename('.html.twig') : $name;
-
-                /* @var SplFileInfo $file */
-                $twigFiles[$name] = $file->getRealPath();
-
-                if ($legacyName !== $name) {
-                    $twigFiles[$legacyName] = $twigFiles[$name];
-                }
-            }
+        if (is_iterable($dir)) {
+            $files = $dir;
+        } elseif (is_string($dir)) {
+            $files = (new Finder())->in($dir)->files()->name('*.twig')->getIterator();
+        } else {
+            throw new \InvalidArgumentException("Template paths entry must be a folder (string) or an iterable");
         }
 
+        $twigFiles = [];
+
+        foreach ($files as $file) {
+
+            /** @var SplFileInfo $file */
+            $name = $file->getBasename();
+            if (!$extension) {
+                $name = Path::getFilenameWithoutExtension($name, '.html.twig');
+            }
+
+            if (!$twigKey) {
+                $twigFiles[$name] = Path::makeRelative($file->getRealPath(), $this->kernel->getProjectDir().'/templates');
+            } else {
+                $twigFiles[$name] = "@$twigKey/".$file->getRelativePathname();
+            }
+        }
         return $twigFiles;
     }
 }

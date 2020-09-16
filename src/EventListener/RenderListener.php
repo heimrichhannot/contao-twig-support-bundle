@@ -64,7 +64,6 @@ class RenderListener
         $this->env = $env;
     }
 
-
     /**
      * @Hook("initializeSystem")
      */
@@ -73,23 +72,16 @@ class RenderListener
         if ('dev' !== $this->env) {
             $cache = new FilesystemCache();
             if (!$cache->has(TemplateCache::TEMPLATE_CACHE_KEY)) {
-                $cache->set(TemplateCache::TEMPLATE_CACHE_KEY, $this->templateLocator->getTwigTemplatePaths());
+                $cache->set(TemplateCache::TEMPLATE_CACHE_KEY, $this->templateLocator->getTwigTemplatePaths(false));
             }
             $templatePaths = $cache->get(TemplateCache::TEMPLATE_CACHE_KEY);
         } else {
-            $templatePaths = $this->templateLocator->getTwigTemplatePaths();
+            $templatePaths = $this->templateLocator->getTwigTemplatePaths(false);
         }
+        $this->templates = $templatePaths;
 
-        foreach ($templatePaths as $templatePath) {
-            $identifier = Path::getFilenameWithoutExtension($templatePath, '.html.twig');
-
-            // add template to the TemplateLoader so that they show up in the backend
-            $directory = Path::getDirectory($templatePath);
-
-            TemplateLoader::addFile($identifier, Path::makeRelative($directory, $this->rootDir));
-
-            // keep track of the relative path (inside the template path)
-            $this->templates[$identifier] = Path::makeRelative($templatePath, $this->rootDir.'/templates');
+        foreach ($templatePaths as $templateName => $templatePath) {
+            TemplateLoader::addFile($templateName, $templatePath);
         }
     }
 
