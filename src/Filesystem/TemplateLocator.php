@@ -1,16 +1,12 @@
 <?php
-/**
- * Contao Open Source CMS
- *
+
+/*
  * Copyright (c) 2020 Heimrich & Hannot GmbH
  *
- * @author  Thomas Körner <t.koerner@heimrich-hannot.de>
- * @license http://www.gnu.org/licences/lgpl-3.0.html LGPL
+ * @license LGPL-3.0-or-later
  */
 
-
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
-
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
 use SplFileInfo;
@@ -73,26 +69,23 @@ class TemplateLocator
 
     /**
      * @param iterable|string $dir
-     * @param string|null $twigKey
-     * @param bool $extension
-     * @return array
      */
     public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
     {
         if (is_iterable($dir)) {
             $files = $dir;
-        } elseif (is_string($dir)) {
+        } elseif (\is_string($dir)) {
             $files = (new Finder())->in($dir)->files()->name('*.twig')->getIterator();
         } else {
-            throw new \InvalidArgumentException("Template paths entry must be a folder (string) or an iterable");
+            throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
         }
 
         $twigFiles = [];
 
         foreach ($files as $file) {
-
             /** @var SplFileInfo $file */
             $name = $file->getBasename();
+
             if (!$extension) {
                 $name = Path::getFilenameWithoutExtension($name, '.html.twig');
             }
@@ -103,6 +96,7 @@ class TemplateLocator
                 $twigFiles[$name] = "@$twigKey/".$file->getRelativePathname();
             }
         }
+
         return $twigFiles;
     }
 }

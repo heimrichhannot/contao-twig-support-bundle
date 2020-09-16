@@ -1,16 +1,12 @@
 <?php
-/**
- * Contao Open Source CMS
- *
+
+/*
  * Copyright (c) 2020 Heimrich & Hannot GmbH
  *
- * @author  Thomas Körner <t.koerner@heimrich-hannot.de>
- * @license http://www.gnu.org/licences/lgpl-3.0.html LGPL
+ * @license LGPL-3.0-or-later
  */
 
-
 namespace HeimrichHannot\TwigSupportBundle\Event;
-
 
 use Contao\Template;
 use Contao\Widget;
@@ -52,17 +48,11 @@ class BeforeRenderTwigTemplate extends Event
         $this->twigTemplatePath = $twigTemplatePath;
     }
 
-    /**
-     * @return string
-     */
     public function getTemplateName(): string
     {
         return $this->templateName;
     }
 
-    /**
-     * @return array
-     */
     public function getTemplateData(): array
     {
         return $this->templateData;
@@ -76,37 +66,23 @@ class BeforeRenderTwigTemplate extends Event
         return $this->contaoTemplate;
     }
 
-    /**
-     * @return array
-     */
     public function getTemplates(): array
     {
         return $this->templates;
     }
 
-    /**
-     * @return string
-     */
     public function getTwigTemplatePath(): string
     {
         return $this->twigTemplatePath;
     }
 
-    /**
-     * @param string $twigTemplatePath
-     */
     public function setTwigTemplatePath(string $twigTemplatePath): void
     {
         $this->twigTemplatePath = $twigTemplatePath;
     }
 
-    /**
-     * @param array $templateData
-     */
     public function setTemplateData(array $templateData): void
     {
         $this->templateData = $templateData;
     }
-
-
 }

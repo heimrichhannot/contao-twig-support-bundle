@@ -1,16 +1,12 @@
 <?php
-/**
- * Contao Open Source CMS
- *
+
+/*
  * Copyright (c) 2020 Heimrich & Hannot GmbH
  *
- * @author  Thomas Körner <t.koerner@heimrich-hannot.de>
- * @license http://www.gnu.org/licences/lgpl-3.0.html LGPL
+ * @license LGPL-3.0-or-later
  */
 
-
 namespace HeimrichHannot\TwigSupportBundle\EventListener;
-
 
 use Contao\Template;
 use Contao\TemplateLoader;
@@ -22,7 +18,6 @@ use HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Environment;
-use Webmozart\PathUtil\Path;
 
 class RenderListener
 {
@@ -71,6 +66,7 @@ class RenderListener
     {
         if ('dev' !== $this->env) {
             $cache = new FilesystemCache();
+
             if (!$cache->has(TemplateCache::TEMPLATE_CACHE_KEY)) {
                 $cache->set(TemplateCache::TEMPLATE_CACHE_KEY, $this->templateLocator->getTwigTemplatePaths(false));
             }
@@ -121,7 +117,6 @@ class RenderListener
             return $buffer;
         }
 
-
         $layout = $this->getLayout();
 
         if ($this->isTerminationCondition($layout)) {
@@ -166,16 +161,12 @@ class RenderListener
 //            $twigTemplateName = $data['arrConfiguration'][self::TWIG_TEMPLATE] ?? null;
 //            $twigTemplateContext = $data ?? null;
 //        } else {
-            $data = $contaoTemplate->getData();
-            $twigTemplateName = $data[self::TWIG_TEMPLATE] ?? null;
-            $twigTemplateContext = $data[self::TWIG_CONTEXT] ?? null;
+        $data = $contaoTemplate->getData();
+        $twigTemplateName = $data[self::TWIG_TEMPLATE] ?? null;
+        $twigTemplateContext = $data[self::TWIG_CONTEXT] ?? null;
 //        }
 
         $twigTemplatePath = $this->templates[$twigTemplateName];
-
-
-
-
 
         /** @var BeforeRenderTwigTemplate $event */
         /** @noinspection PhpMethodParametersCountMismatchInspection */
