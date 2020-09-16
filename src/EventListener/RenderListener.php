@@ -15,9 +15,11 @@ namespace HeimrichHannot\TwigSupportBundle\EventListener;
 use Contao\Template;
 use Contao\TemplateLoader;
 use Contao\Widget;
+use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplate;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator;
+use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Environment;
 use Webmozart\PathUtil\Path;
@@ -45,16 +47,21 @@ class RenderListener
      * @var Environment
      */
     protected $twig;
+    /**
+     * @var string
+     */
+    protected $env;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(TemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig)
+    public function __construct(TemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env)
     {
         $this->templateLocator = $templateLocator;
         $this->rootDir = $rootDir;
         $this->eventDispatcher = $eventDispatcher;
         $this->twig = $twig;
+        $this->env = $env;
     }
 
 
@@ -63,7 +70,15 @@ class RenderListener
      */
     public function onInitializeSystem(): void
     {
-        $templatePaths = $this->templateLocator->getTwigTemplatePaths();
+        if ('dev' !== $this->env) {
+            $cache = new FilesystemCache();
+            if (!$cache->has(TemplateCache::TEMPLATE_CACHE_KEY)) {
+                $cache->set(TemplateCache::TEMPLATE_CACHE_KEY, $this->templateLocator->getTwigTemplatePaths());
+            }
+            $templatePaths = $cache->get(TemplateCache::TEMPLATE_CACHE_KEY);
+        } else {
+            $templatePaths = $this->templateLocator->getTwigTemplatePaths();
+        }
 
         foreach ($templatePaths as $templatePath) {
             $identifier = Path::getFilenameWithoutExtension($templatePath, '.html.twig');

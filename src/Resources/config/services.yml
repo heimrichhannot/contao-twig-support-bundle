@@ -4,9 +4,12 @@ services:
     autoconfigure: true
     bind:
       $rootDir: '%kernel.project_dir%'
+      $env: '%kernel.environment%'
 
 
   HeimrichHannot\TwigSupportBundle\EventListener\RenderListener:
     public: true
 
   HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator: ~
+
+  HeimrichHannot\TwigSupportBundle\Cache\TemplateCache: ~
