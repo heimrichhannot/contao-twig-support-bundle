@@ -9,6 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\Event;
 
 use Contao\Template;
+use Contao\Widget;
 use Symfony\Component\EventDispatcher\Event;
 
 class BeforeParseTwigTemplateEvent extends Event
@@ -23,7 +24,7 @@ class BeforeParseTwigTemplateEvent extends Event
      */
     protected $templateData;
     /**
-     * @var Template
+     * @var Template|Widget
      */
     protected $contaoTemplate;
     /**
@@ -34,7 +35,7 @@ class BeforeParseTwigTemplateEvent extends Event
     /**
      * BeforeParseTwigTemplateEvent constructor.
      */
-    public function __construct(string $templateName, array $templateData, Template $contaoTemplate, array $templates)
+    public function __construct(string $templateName, array $templateData, $contaoTemplate, array $templates)
     {
         $this->templateName = $templateName;
         $this->templateData = $templateData;
@@ -52,7 +53,10 @@ class BeforeParseTwigTemplateEvent extends Event
         return $this->templateData;
     }
 
-    public function getContaoTemplate(): Template
+    /**
+     * @return Template|Widget
+     */
+    public function getContaoTemplate()
     {
         return $this->contaoTemplate;
     }

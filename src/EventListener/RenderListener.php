@@ -17,6 +17,9 @@ use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplate;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Twig\Environment;
 
 class RenderListener
@@ -117,36 +120,30 @@ class RenderListener
             return $buffer;
         }
 
-        $layout = $this->getLayout();
+        $serializer = new Serializer([
+            new PropertyNormalizer(null, null, null, null, null, [
+                AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                    'objContainer',
+                    'arrStaticObjects',
+                    'arrSingletons',
+                    'arrObjects',
+                ],
+            ]),
+        ]);
 
-        if ($this->isTerminationCondition($layout)) {
-            return $buffer;
-        }
+        $templateData = $serializer->normalize($widget);
 
-        return $buffer;
-//
-//        $data = $this->classUtil->jsonSerialize(
-//            $widget,
-//            [],
-//            [
-//                'ignorePropertyVisibility' => true,
-//            ]
-//        );
-//
-//        $result = $this->applyTwigTemplate($widget->template, $data);
-//
-//        if (false === $result) {
-//            return $buffer;
-//        }
-//
-//        [$templateName, $templateData] = $result;
-//
-//        $widget->{static::TWIG_TEMPLATE} = $templateName;
-//        $widget->{static::TWIG_CONTEXT} = $templateData;
-//
-//        $widget->template = 'twig_template_proxy';
-//
-//        return $widget->inherit();
+        $event = $this->eventDispatcher->dispatch(
+            BeforeParseTwigTemplateEvent::NAME,
+            new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget, $this->templates)
+        );
+
+        $widget->{static::TWIG_TEMPLATE} = $templateName;
+        $widget->{static::TWIG_CONTEXT} = $templateData;
+
+        $widget->template = 'twig_template_proxy';
+
+        return $widget->inherit();
     }
 
     /**
@@ -156,15 +153,8 @@ class RenderListener
      */
     public function render($contaoTemplate): string
     {
-//        if ($contaoTemplate instanceof Widget) {
-//            $data = $this->prepareWidget($contaoTemplate);
-//            $twigTemplateName = $data['arrConfiguration'][self::TWIG_TEMPLATE] ?? null;
-//            $twigTemplateContext = $data ?? null;
-//        } else {
-        $data = $contaoTemplate->getData();
-        $twigTemplateName = $data[self::TWIG_TEMPLATE] ?? null;
-        $twigTemplateContext = $data[self::TWIG_CONTEXT] ?? null;
-//        }
+        $twigTemplateName = $contaoTemplate->{static::TWIG_TEMPLATE};
+        $twigTemplateContext = $contaoTemplate->{static::TWIG_CONTEXT};
 
         $twigTemplatePath = $this->templates[$twigTemplateName];
 
@@ -177,7 +167,7 @@ class RenderListener
         );
 
         if ($contaoTemplate instanceof Template) {
-            $contaoTemplate->setData($event->getTemplateData());
+            $contaoTemplate->setData($contaoTemplate->getData());
         }
 
         return $this->twig->render($event->getTwigTemplatePath(), $event->getTemplateData());
