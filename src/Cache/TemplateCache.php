@@ -8,24 +8,25 @@
 
 namespace HeimrichHannot\TwigSupportBundle\Cache;
 
-use HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator;
+use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\HttpKernel\CacheClearer\CacheClearerInterface;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
 class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
 {
-    public const TEMPLATE_CACHE_KEY = 'huh.twig_support.templates';
+    public const TEMPLATES_WITH_EXTENSION_CACHE_KEY = 'huh.twig_support.templates_with_extension';
+    public const TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY = 'huh.twig_support.templates_without_extension';
 
     /**
-     * @var TemplateLocator
+     * @var TwigTemplateLocator
      */
     protected $templateLocator;
 
     /**
      * TemplateCacheWarmer constructor.
      */
-    public function __construct(TemplateLocator $templateLocator)
+    public function __construct(TwigTemplateLocator $templateLocator)
     {
         $this->templateLocator = $templateLocator;
     }
@@ -37,14 +38,15 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
 
     public function warmUp($cacheDir)
     {
-        $templates = $this->templateLocator->getTwigTemplatePaths();
         $cache = new FilesystemCache();
-        $cache->set(static::TEMPLATE_CACHE_KEY, $templates);
+        $cache->set(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY, $this->templateLocator->getTemplates(true, true));
+        $cache->set(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY, $this->templateLocator->getTemplates(false, true));
     }
 
     public function clear($cacheDir)
     {
         $cache = new FilesystemCache();
-        $cache->deleteItem(static::TEMPLATE_CACHE_KEY);
+        $cache->deleteItem(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY);
+        $cache->deleteItem(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY);
     }
 }

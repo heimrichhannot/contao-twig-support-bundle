@@ -11,11 +11,9 @@ namespace HeimrichHannot\TwigSupportBundle\EventListener;
 use Contao\Template;
 use Contao\TemplateLoader;
 use Contao\Widget;
-use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
-use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplate;
-use HeimrichHannot\TwigSupportBundle\Filesystem\TemplateLocator;
-use Symfony\Component\Cache\Simple\FilesystemCache;
+use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
+use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
@@ -53,7 +51,7 @@ class RenderListener
     /**
      * RenderListener constructor.
      */
-    public function __construct(TemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env)
+    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env)
     {
         $this->templateLocator = $templateLocator;
         $this->rootDir = $rootDir;
@@ -67,19 +65,9 @@ class RenderListener
      */
     public function onInitializeSystem(): void
     {
-        if ('dev' !== $this->env) {
-            $cache = new FilesystemCache();
+        $this->templates = $this->templateLocator->getTemplates(false);
 
-            if (!$cache->has(TemplateCache::TEMPLATE_CACHE_KEY)) {
-                $cache->set(TemplateCache::TEMPLATE_CACHE_KEY, $this->templateLocator->getTwigTemplatePaths(false));
-            }
-            $templatePaths = $cache->get(TemplateCache::TEMPLATE_CACHE_KEY);
-        } else {
-            $templatePaths = $this->templateLocator->getTwigTemplatePaths(false);
-        }
-        $this->templates = $templatePaths;
-
-        foreach ($templatePaths as $templateName => $templatePath) {
+        foreach ($this->templates as $templateName => $templatePath) {
             TemplateLoader::addFile($templateName, $templatePath);
         }
     }
@@ -158,12 +146,12 @@ class RenderListener
 
         $twigTemplatePath = $this->templates[$twigTemplateName];
 
-        /** @var BeforeRenderTwigTemplate $event */
+        /** @var BeforeRenderTwigTemplateEvent $event */
         /** @noinspection PhpMethodParametersCountMismatchInspection */
         /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
-            BeforeRenderTwigTemplate::NAME,
-            new BeforeRenderTwigTemplate($twigTemplateName, $twigTemplateContext, $twigTemplatePath, $contaoTemplate, $this->templates)
+            BeforeRenderTwigTemplateEvent::NAME,
+            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateContext, $twigTemplatePath, $contaoTemplate, $this->templates)
         );
 
         if ($contaoTemplate instanceof Template) {

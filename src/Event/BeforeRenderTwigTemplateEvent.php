@@ -12,7 +12,7 @@ use Contao\Template;
 use Contao\Widget;
 use Symfony\Component\EventDispatcher\Event;
 
-class BeforeRenderTwigTemplate extends Event
+class BeforeRenderTwigTemplateEvent extends Event
 {
     const NAME = 'huh.twig_support.before_render_twig_template';
     /**

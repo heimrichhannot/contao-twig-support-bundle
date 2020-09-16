@@ -9,12 +9,15 @@
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
+use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
+use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use SplFileInfo;
+use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Webmozart\PathUtil\Path;
 
-class TemplateLocator
+class TwigTemplateLocator
 {
     /**
      * @var KernelInterface
@@ -32,11 +35,56 @@ class TemplateLocator
     }
 
     /**
-     * Return all twig files.
+     * Return a twig template path by template name (without or with extension).
+     *
+     * @param string $name
+     * @param bool $disableCache
+     * @return string
+     * @throws \Exception
+     */
+    public function getTemplatePath(string $name, bool $disableCache = false): string
+    {
+        if (($templates = $this->getTemplates(false, $disableCache)) && array_key_exists($name, $templates)) {
+            return $templates[$name];
+        } elseif (($templates = $this->getTemplates(true, $disableCache)) && array_key_exists($name, $templates)) {
+            return $templates[$name];
+        }
+        throw new TemplateNotFoundException(sprintf('Unable to find template "%s".', $name));
+    }
+
+    /**
+     * Return a list of all twig templates and their paths
+     *
+     * @param bool $extension
+     * @param bool $disableCache
+     * @return array
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function getTemplates(bool $extension = false, bool $disableCache = false): array
+    {
+        if ('dev' !== $this->kernel->getEnvironment() && !$disableCache) {
+            $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
+            if ($extension) {
+                $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
+            }
+
+            $cache = new FilesystemCache();
+
+            if (!$cache->has($cacheKey)) {
+                $cache->set($cacheKey, $this->getTwigTemplatePaths(false));
+            }
+            return $cache->get($cacheKey);
+        } else {
+            return $this->getTwigTemplatePaths(false);
+        }
+    }
+
+    /**
+     * Return all twig file path.
      *
      * @return array
      */
-    public function getTwigTemplatePaths(bool $extension = false)
+    protected function getTwigTemplatePaths(bool $extension = false)
     {
         $bundles = $this->kernel->getBundles();
         $twigFiles = [];
