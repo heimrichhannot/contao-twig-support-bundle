@@ -120,7 +120,7 @@ class TwigTemplateLocator
         $twigFiles = [];
 
         if (\is_array($bundles)) {
-            foreach (array_reverse($bundles) as $key => $value) {
+            foreach ($bundles as $key => $value) {
                 $path = $this->kernel->locateResource("@$key");
 
                 $dir = rtrim($path, '/').'/Resources/views';
