@@ -19,6 +19,9 @@ use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\LoaderInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -32,7 +35,7 @@ class RenderListener
     /** @var string[] */
     protected $templates = [];
     /**
-     * @var TemplateLocator
+     * @var TwigTemplateLocator
      */
     protected $templateLocator;
     /**
@@ -51,12 +54,18 @@ class RenderListener
      * @var string
      */
     protected $env;
-
-    protected KernelInterface $kernel;
-
-    protected RequestStack $requestStack;
-
-    protected ScopeMatcher $scopeMatcher;
+    /**
+     * @var KernelInterface
+     */
+    protected $kernel;
+    /**
+     * @var RequestStack
+     */
+    protected $requestStack;
+    /**
+     * @var ScopeMatcher
+     */
+    protected $scopeMatcher;
 
     /**
      * RenderListener constructor.
@@ -77,9 +86,15 @@ class RenderListener
      */
     public function onInitializeSystem(): void
     {
+        $request = $this->requestStack->getCurrentRequest();
+
+        if (!$request) {
+            return;
+        }
+
         $this->templates = $this->templateLocator->getTemplates(false);
 
-        if ($this->scopeMatcher->isBackendRequest($this->requestStack->getCurrentRequest())) {
+        if ($this->scopeMatcher->isBackendRequest($request)) {
             foreach ($this->templates as $templateName => $templatePath) {
                 TemplateLoader::addFile($templateName, $templatePath);
             }
@@ -122,18 +137,32 @@ class RenderListener
             return $buffer;
         }
 
-        $serializer = new Serializer([
-            new PropertyNormalizer(null, null, null, null, null, [
-                AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                    'objContainer',
-                    'arrStaticObjects',
-                    'arrSingletons',
-                    'arrObjects',
-                ],
-            ]),
-        ]);
+        $loader = new class() implements LoaderInterface {
+            public function loadClassMetadata(ClassMetadataInterface $classMetadata)
+            {
+                // TODO: Implement loadClassMetadata() method.
+            }
+        };
 
-        $templateData = $serializer->normalize($widget);
+//        $metaDataFactory = new ClassMetadataFactory(new LoaderInterface);
+
+//        $serializer = new Serializer([
+//            new PropertyNormalizer(null, null, null, null, null, [
+        ////                AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function($object, $format, $context) {
+        ////                    return null;
+        ////                },
+        ////                AbstractNormalizer::IGNORED_ATTRIBUTES => [
+        ////                    'objContainer',
+        ////                    'arrStaticObjects',
+        ////                    'arrSingletons',
+        ////                    'arrObjects',
+        ////                ],
+        ////            ]),
+//        ]);
+//
+//        $templateData = $serializer->normalize($widget);
+
+        $templateData = [];
 
         $event = $this->eventDispatcher->dispatch(
             BeforeParseTwigTemplateEvent::NAME,

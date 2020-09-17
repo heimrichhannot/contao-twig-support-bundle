@@ -9,14 +9,15 @@
 namespace HeimrichHannot\TwigSupportBundle\Cache;
 
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
-use Symfony\Component\Cache\Simple\FilesystemCache;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpKernel\CacheClearer\CacheClearerInterface;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
 class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
 {
-    public const TEMPLATES_WITH_EXTENSION_CACHE_KEY = 'huh.twig_support.templates_with_extension';
-    public const TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY = 'huh.twig_support.templates_without_extension';
+    public const CACHE_POOL_NAME = 'huh_twig_support';
+    public const TEMPLATES_WITH_EXTENSION_CACHE_KEY = 'templates_with_extension';
+    public const TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY = 'templates_without_extension';
 
     /**
      * @var TwigTemplateLocator
@@ -38,15 +39,14 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
 
     public function warmUp($cacheDir)
     {
-        $cache = new FilesystemCache();
-        $cache->set(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY, $this->templateLocator->getTemplates(true, true));
-        $cache->set(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY, $this->templateLocator->getTemplates(false, true));
+        $cache = new FilesystemAdapter(static::CACHE_POOL_NAME);
+        $cache->save($cache->getItem(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY)->set($this->templateLocator->getTemplates(true, true)));
+        $cache->save($cache->getItem(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY)->set($this->templateLocator->getTemplates(false, true)));
     }
 
     public function clear($cacheDir)
     {
-        $cache = new FilesystemCache();
-        $cache->deleteItem(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY);
-        $cache->deleteItem(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY);
+        $cache = new FilesystemAdapter('huh_twig_support');
+        $cache->deleteItems([static::TEMPLATES_WITH_EXTENSION_CACHE_KEY, static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY]);
     }
 }

@@ -12,7 +12,7 @@ use Contao\CoreBundle\Config\ResourceFinderInterface;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use SplFileInfo;
-use Symfony\Component\Cache\Simple\FilesystemCache;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Webmozart\PathUtil\Path;
@@ -64,13 +64,15 @@ class TwigTemplateLocator
                 $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
             }
 
-            $cache = new FilesystemCache();
+            $cache = new FilesystemAdapter(TemplateCache::CACHE_POOL_NAME);
+            $cacheItem = $cache->getItem($cacheKey);
 
-            if (!$cache->has($cacheKey)) {
-                $cache->set($cacheKey, $this->getTwigTemplatePaths(false));
+            if (!$cacheItem->isHit()) {
+                $cacheItem->set($this->getTwigTemplatePaths(false));
+                $cache->save($cacheItem);
             }
 
-            return $cache->get($cacheKey);
+            return $cache->getItem($cacheKey)->get();
         }
 
         return $this->getTwigTemplatePaths(false);

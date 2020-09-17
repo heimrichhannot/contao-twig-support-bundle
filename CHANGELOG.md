@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.1.3-DEV] - 2020-09-17
+- switch to symfony PSR-6 cache due strange errors in contao 4.4 with PSR-16 filesystem cache.
 - twig templates now only added in backend to TemplateLoader
 - fixed bundle order for template loading
 
