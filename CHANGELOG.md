@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.1.3-DEV] - 2020-09-17
-- do not add block templates to TemplateLoader
+- twig templates now only added in backend to TemplateLoader
 - fixed bundle order for template loading
 
 ## [0.1.2] - 2020-09-17

@@ -9,6 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\EventListener;
 
 use Contao\Config;
+use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\Template;
 use Contao\TemplateLoader;
 use Contao\Widget;
@@ -16,6 +17,8 @@ use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -49,16 +52,24 @@ class RenderListener
      */
     protected $env;
 
+    protected KernelInterface $kernel;
+
+    protected RequestStack $requestStack;
+
+    protected ScopeMatcher $scopeMatcher;
+
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env)
+    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
     {
         $this->templateLocator = $templateLocator;
         $this->rootDir = $rootDir;
         $this->eventDispatcher = $eventDispatcher;
         $this->twig = $twig;
         $this->env = $env;
+        $this->requestStack = $requestStack;
+        $this->scopeMatcher = $scopeMatcher;
     }
 
     /**
@@ -68,8 +79,8 @@ class RenderListener
     {
         $this->templates = $this->templateLocator->getTemplates(false);
 
-        foreach ($this->templates as $templateName => $templatePath) {
-            if (!\in_array($templateName, ['block_searchable', 'block_unsearchable'])) {
+        if ($this->scopeMatcher->isBackendRequest($this->requestStack->getCurrentRequest())) {
+            foreach ($this->templates as $templateName => $templatePath) {
                 TemplateLoader::addFile($templateName, $templatePath);
             }
         }
