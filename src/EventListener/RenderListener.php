@@ -8,6 +8,7 @@
 
 namespace HeimrichHannot\TwigSupportBundle\EventListener;
 
+use Contao\Config;
 use Contao\Template;
 use Contao\TemplateLoader;
 use Contao\Widget;
@@ -158,6 +159,13 @@ class RenderListener
             $contaoTemplate->setData($contaoTemplate->getData());
         }
 
-        return $this->twig->render($event->getTwigTemplatePath(), $event->getTemplateData());
+        $buffer = $this->twig->render($event->getTwigTemplatePath(), $event->getTemplateData());
+
+        if (Config::get('debugMode')) {
+            $strRelPath = $event->getTwigTemplatePath();
+            $buffer = "\n<!-- TWIG TEMPLATE START: $strRelPath -->\n$buffer\n<!-- TWIG TEMPLATE END: $strRelPath -->\n";
+        }
+
+        return $buffer;
     }
 }
