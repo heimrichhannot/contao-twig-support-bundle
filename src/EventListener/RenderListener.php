@@ -16,14 +16,11 @@ use Contao\Widget;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
+use HeimrichHannot\TwigSupportBundle\Normalizer\ContaoWidgetNormalizer;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
-use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
-use Symfony\Component\Serializer\Mapping\Loader\LoaderInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Twig\Environment;
 
@@ -137,40 +134,31 @@ class RenderListener
             return $buffer;
         }
 
-        $loader = new class() implements LoaderInterface {
-            public function loadClassMetadata(ClassMetadataInterface $classMetadata)
-            {
-                // TODO: Implement loadClassMetadata() method.
-            }
-        };
+        $propertyNormalizer = new ContaoWidgetNormalizer();
+        $propertyNormalizer->setIgnoredAttributes([
+            'objContainer',
+            'arrStaticObjects',
+            'arrSingletons',
+            'arrObjects',
+        ]);
+        $propertyNormalizer->setCircularReferenceHandler(function ($circularReferenceHandler, $object) {
+            return null;
+        });
 
-//        $metaDataFactory = new ClassMetadataFactory(new LoaderInterface);
+        $serializer = new Serializer([$propertyNormalizer]);
 
-//        $serializer = new Serializer([
-//            new PropertyNormalizer(null, null, null, null, null, [
-        ////                AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function($object, $format, $context) {
-        ////                    return null;
-        ////                },
-        ////                AbstractNormalizer::IGNORED_ATTRIBUTES => [
-        ////                    'objContainer',
-        ////                    'arrStaticObjects',
-        ////                    'arrSingletons',
-        ////                    'arrObjects',
-        ////                ],
-        ////            ]),
-//        ]);
-//
-//        $templateData = $serializer->normalize($widget);
-
-        $templateData = [];
+        $templateData = $serializer->normalize($widget, null, [
+            AbstractObjectNormalizer::ENABLE_MAX_DEPTH => true,
+            AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT,
+        ]);
 
         $event = $this->eventDispatcher->dispatch(
             BeforeParseTwigTemplateEvent::NAME,
             new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget, $this->templates)
         );
 
-        $widget->{static::TWIG_TEMPLATE} = $templateName;
-        $widget->{static::TWIG_CONTEXT} = $templateData;
+        $widget->{static::TWIG_TEMPLATE} = $event->getTemplateName();
+        $widget->{static::TWIG_CONTEXT} = $event->getTemplateData();
 
         $widget->template = 'twig_template_proxy';
 
