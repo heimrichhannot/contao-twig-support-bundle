@@ -156,7 +156,7 @@ class RenderListener
         );
 
         if ($contaoTemplate instanceof Template) {
-            $contaoTemplate->setData($contaoTemplate->getData());
+            $contaoTemplate->setData($event->getTemplateData());
         }
 
         $buffer = $this->twig->render($event->getTwigTemplatePath(), $event->getTemplateData());
