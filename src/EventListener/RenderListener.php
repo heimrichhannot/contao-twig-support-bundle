@@ -69,7 +69,9 @@ class RenderListener
         $this->templates = $this->templateLocator->getTemplates(false);
 
         foreach ($this->templates as $templateName => $templatePath) {
-            TemplateLoader::addFile($templateName, $templatePath);
+            if (!\in_array($templateName, ['block_searchable', 'block_unsearchable'])) {
+                TemplateLoader::addFile($templateName, $templatePath);
+            }
         }
     }
 
