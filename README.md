@@ -4,7 +4,8 @@ A bundle to enable [twig](https://twig.symfony.com/) templates support in contao
 
 ## Features
 * use twig to write contao templates
-* select twig templates in your module/element custom template selection or override default templates in twig.
+* select twig templates in your module/element custom template selection or override default templates in twig
+* support for all types of templates including widgets
 
 ## Usage
 
