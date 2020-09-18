@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.0-DEV] - 2020-09-18
+- added configuration to enable contao template loading
+
 ## [0.1.4] - 2020-09-18
 - replaced symfony serializer with custom object normalizer
 

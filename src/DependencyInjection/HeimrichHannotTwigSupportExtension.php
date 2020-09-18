@@ -21,7 +21,15 @@ class HeimrichHannotTwigSupportExtension extends Extension
             $container,
             new FileLocator(__DIR__.'/../Resources/config')
         );
-
         $loader->load('services.yml');
+
+        $configuration = new Configuration();
+        $bundleConfig = $this->processConfiguration($configuration, $configs);
+        $container->setParameter('huh_twig_support', $bundleConfig);
+    }
+
+    public function getAlias()
+    {
+        return 'huh_twig_support';
     }
 }

@@ -5,6 +5,7 @@ services:
     bind:
       $rootDir: '%kernel.project_dir%'
       $env: '%kernel.environment%'
+      $bundleConfig: '%huh_twig_support%'
 
   HeimrichHannot\TwigSupportBundle\EventListener\RenderListener:
     public: true

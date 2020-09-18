@@ -15,6 +15,8 @@ Install via contao manager or composer:
 
     composer require heimrichhannot/contao-twig-support-bundle
     
+
+    
 ### Your first template
 
 Just create a twig template like `ce_text_custom.html.twig` and add it to your projekt `template` folder (in contao 4.4: `app/Resources/views`) and you can select the template as custom Template in the text content element. You can override every core template that is parsed by `parseTemplate` and `parseWidget` hook. 
@@ -45,3 +47,12 @@ BeforeRenderTwigTemplate | Dispatched before twig templates is rendered.
 
 ## Credits
 * thanks to [m-vo](https://github.com/m-vo) and his [Twig Bundle](https://github.com/m-vo/contao-twig) which set the base for this bundle
+
+### Configuration reference
+
+```yaml
+huh_twig_support:
+
+    # Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).
+    enable_template_loader: false
+```

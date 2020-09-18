@@ -8,8 +8,13 @@
 
 namespace HeimrichHannot\TwigSupportBundle;
 
+use HeimrichHannot\TwigSupportBundle\DependencyInjection\HeimrichHannotTwigSupportExtension;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class HeimrichHannotTwigSupportBundle extends Bundle
 {
+    public function getContainerExtension()
+    {
+        return new HeimrichHannotTwigSupportExtension();
+    }
 }

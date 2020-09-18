@@ -61,13 +61,23 @@ class RenderListener
      * @var ScopeMatcher
      */
     protected $scopeMatcher;
-
-    protected NormalizerHelper $normalizer;
+    /**
+     * @var NormalizerHelper
+     */
+    protected $normalizer;
+    /**
+     * @var array
+     */
+    protected $bundleConfig;
+    /**
+     * @var bool
+     */
+    protected $enableTemplateLoader = false;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer)
+    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig)
     {
         $this->templateLocator = $templateLocator;
         $this->rootDir = $rootDir;
@@ -77,6 +87,11 @@ class RenderListener
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
         $this->normalizer = $normalizer;
+        $this->bundleConfig = $bundleConfig;
+
+        if (isset($bundleConfig['enable_template_loader']) && true === $bundleConfig['enable_template_loader']) {
+            $this->enableTemplateLoader = true;
+        }
     }
 
     /**
@@ -84,9 +99,11 @@ class RenderListener
      */
     public function onInitializeSystem(): void
     {
-        $request = $this->requestStack->getCurrentRequest();
+        if (!$this->enableTemplateLoader) {
+            return;
+        }
 
-        if (!$request) {
+        if (!$request = $this->requestStack->getCurrentRequest()) {
             return;
         }
 
@@ -106,7 +123,7 @@ class RenderListener
     {
         $templateName = $contaoTemplate->getName();
 
-        if (!isset($this->templates[$templateName])) {
+        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName])) {
             return;
         }
 
@@ -131,7 +148,7 @@ class RenderListener
     {
         $templateName = $widget->template;
 
-        if (!isset($this->templates[$templateName])) {
+        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName])) {
             return $buffer;
         }
 
