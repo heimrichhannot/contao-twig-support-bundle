@@ -16,12 +16,10 @@ use Contao\Widget;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
-use HeimrichHannot\TwigSupportBundle\Normalizer\ContaoWidgetNormalizer;
+use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use Twig\Environment;
 
 class RenderListener
@@ -64,10 +62,12 @@ class RenderListener
      */
     protected $scopeMatcher;
 
+    protected NormalizerHelper $normalizer;
+
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
+    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer)
     {
         $this->templateLocator = $templateLocator;
         $this->rootDir = $rootDir;
@@ -76,6 +76,7 @@ class RenderListener
         $this->env = $env;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
+        $this->normalizer = $normalizer;
     }
 
     /**
@@ -134,23 +135,16 @@ class RenderListener
             return $buffer;
         }
 
-        $propertyNormalizer = new ContaoWidgetNormalizer();
-        $propertyNormalizer->setIgnoredAttributes([
-            'objContainer',
-            'arrStaticObjects',
-            'arrSingletons',
-            'arrObjects',
-        ]);
-        $propertyNormalizer->setCircularReferenceHandler(function ($circularReferenceHandler, $object) {
-            return null;
-        });
+        $templateData = $this->normalizer->normalizeObject($widget, [],
+            [
+                'ignorePropertyVisibility' => true,
+                'includeProperties' => true,
+                'ignoreMethodVisibility' => true,
+            ]);
 
-        $serializer = new Serializer([$propertyNormalizer]);
-
-        $templateData = $serializer->normalize($widget, null, [
-            AbstractObjectNormalizer::ENABLE_MAX_DEPTH => true,
-            AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT,
-        ]);
+        if (isset($templateData['options']) && !empty($templateData['options'])) {
+            $templateData['arrOptions'] = $templateData['options'];
+        }
 
         $event = $this->eventDispatcher->dispatch(
             BeforeParseTwigTemplateEvent::NAME,
@@ -173,7 +167,7 @@ class RenderListener
     public function render($contaoTemplate): string
     {
         $twigTemplateName = $contaoTemplate->{static::TWIG_TEMPLATE};
-        $twigTemplateContext = $contaoTemplate->{static::TWIG_CONTEXT};
+        $twigTemplateData = $contaoTemplate->{static::TWIG_CONTEXT};
 
         $twigTemplatePath = $this->templates[$twigTemplateName];
 
@@ -182,7 +176,7 @@ class RenderListener
         /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
             BeforeRenderTwigTemplateEvent::NAME,
-            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateContext, $twigTemplatePath, $contaoTemplate, $this->templates)
+            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate, $this->templates)
         );
 
         if ($contaoTemplate instanceof Template) {
