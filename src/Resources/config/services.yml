@@ -11,5 +11,6 @@ services:
     public: true
 
   HeimrichHannot\TwigSupportBundle\Cache\TemplateCache: ~
-  HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator: ~
+  HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator:
+    public: true
   HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper: ~
