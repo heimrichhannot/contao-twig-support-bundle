@@ -27,20 +27,15 @@ class BeforeParseTwigTemplateEvent extends Event
      * @var Template|Widget
      */
     protected $contaoTemplate;
-    /**
-     * @var array
-     */
-    protected $templates;
 
     /**
      * BeforeParseTwigTemplateEvent constructor.
      */
-    public function __construct(string $templateName, array $templateData, $contaoTemplate, array $templates)
+    public function __construct(string $templateName, array $templateData, $contaoTemplate)
     {
         $this->templateName = $templateName;
         $this->templateData = $templateData;
         $this->contaoTemplate = $contaoTemplate;
-        $this->templates = $templates;
     }
 
     public function getTemplateName(): string
@@ -59,16 +54,6 @@ class BeforeParseTwigTemplateEvent extends Event
     public function getContaoTemplate()
     {
         return $this->contaoTemplate;
-    }
-
-    public function getTemplates(): array
-    {
-        return $this->templates;
-    }
-
-    public function setTemplateName(string $templateName): void
-    {
-        $this->templateName = $templateName;
     }
 
     public function setTemplateData(array $templateData): void

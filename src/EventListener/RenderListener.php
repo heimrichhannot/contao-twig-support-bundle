@@ -111,7 +111,7 @@ class RenderListener
 
         if ($this->scopeMatcher->isBackendRequest($request)) {
             foreach ($this->templates as $templateName => $templatePath) {
-                TemplateLoader::addFile($templateName, $templatePath);
+                TemplateLoader::addFile($templateName, $this->templateLocator->getTemplatePath($templateName));
             }
         }
     }
@@ -129,9 +129,11 @@ class RenderListener
 
         $templateData = $contaoTemplate->getData();
 
+        /** @noinspection PhpMethodParametersCountMismatchInspection */
+        /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
             BeforeParseTwigTemplateEvent::NAME,
-            new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate, $this->templates)
+            new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
         );
 
         $contaoTemplate->setName('twig_template_proxy');
@@ -163,9 +165,11 @@ class RenderListener
             $templateData['arrOptions'] = $templateData['options'];
         }
 
+        /** @noinspection PhpMethodParametersCountMismatchInspection */
+        /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
             BeforeParseTwigTemplateEvent::NAME,
-            new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget, $this->templates)
+            new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget)
         );
 
         $widget->{static::TWIG_TEMPLATE} = $event->getTemplateName();
@@ -186,14 +190,14 @@ class RenderListener
         $twigTemplateName = $contaoTemplate->{static::TWIG_TEMPLATE};
         $twigTemplateData = $contaoTemplate->{static::TWIG_CONTEXT};
 
-        $twigTemplatePath = $this->templates[$twigTemplateName];
+        $twigTemplatePath = $this->templateLocator->getTemplatePath($twigTemplateName);
 
         /** @var BeforeRenderTwigTemplateEvent $event */
         /** @noinspection PhpMethodParametersCountMismatchInspection */
         /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
             BeforeRenderTwigTemplateEvent::NAME,
-            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate, $this->templates)
+            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate)
         );
 
         if ($contaoTemplate instanceof Template) {

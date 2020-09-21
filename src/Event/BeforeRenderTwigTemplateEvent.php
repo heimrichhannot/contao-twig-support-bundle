@@ -28,10 +28,6 @@ class BeforeRenderTwigTemplateEvent extends Event
      */
     protected $contaoTemplate;
     /**
-     * @var array
-     */
-    protected $templates;
-    /**
      * @var string
      */
     protected $twigTemplatePath;
@@ -39,12 +35,11 @@ class BeforeRenderTwigTemplateEvent extends Event
     /**
      * BeforeRenderTwigTemplate constructor.
      */
-    public function __construct(string $templateName, array $templateData, string $twigTemplatePath, $contaoTemplate, array $templates)
+    public function __construct(string $templateName, array $templateData, string $twigTemplatePath, $contaoTemplate)
     {
         $this->templateName = $templateName;
         $this->templateData = $templateData;
         $this->contaoTemplate = $contaoTemplate;
-        $this->templates = $templates;
         $this->twigTemplatePath = $twigTemplatePath;
     }
 
@@ -64,11 +59,6 @@ class BeforeRenderTwigTemplateEvent extends Event
     public function getContaoTemplate()
     {
         return $this->contaoTemplate;
-    }
-
-    public function getTemplates(): array
-    {
-        return $this->templates;
     }
 
     public function getTwigTemplatePath(): string

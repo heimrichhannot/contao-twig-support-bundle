@@ -1,9 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.2.0-DEV] - 2020-09-18
+## [0.2.0] - 2020-09-18
 - added configuration to enable contao template loading
+- added TwigTemplateLocator::getTemplateGroup()
+- added TwigTemplateLocator::getPrefixedFiles()
+- changed TwigTemplateLocator::getTemplatePath() now respects themes folder
+- changed TwigTemplateLocator::getTemplatePath() use configuration array instead of specific options parameter
+- changed data structure in TwigTemplateLocator
+- renamed TwigTemplateLocator::getTwigTemplatePaths() to generateContaoTwigTemplatePaths()
 - made TwigTemplateLocator public
+- removed templates from event as they can be loaded from TwigTemplateLoader service
 
 ## [0.1.4] - 2020-09-18
 - replaced symfony serializer with custom object normalizer
