@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2020-09-22
+- fixed issue with regex TwigTemplateLocator::getPrefixedFiles()
+
 ## [0.2.2] - 2020-09-22
 - fixed TypeError in TwigTemplateLocator
 

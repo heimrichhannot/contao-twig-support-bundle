@@ -60,10 +60,7 @@ BeforeRenderTwigTemplate | Dispatched before twig templates is rendered.
 
 This bundle is a great base if you want to use twig in your own bundles. Use the `HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator` service to load your templates, where you need them while keeping the contao template hierarchy. 
 
-## Credits
-* thanks to [m-vo](https://github.com/m-vo) and his [Twig Bundle](https://github.com/m-vo/contao-twig) which implementation was in inspiration and inital basis for this bundle.
-
-### Configuration reference
+## Configuration reference
 
 ```yaml
 huh_twig_support:
@@ -71,3 +68,6 @@ huh_twig_support:
     # Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).
     enable_template_loader: false
 ```
+
+## Credits
+* thanks to [m-vo](https://github.com/m-vo) and his [Twig Bundle](https://github.com/m-vo/contao-twig) which implementation was in inspiration and inital basis for this bundle.

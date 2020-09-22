@@ -207,7 +207,7 @@ class TwigTemplateLocator
         $disableCache = isset($configuration['disableCache']) && true === $configuration['disableCache'];
         $extension = isset($configuration['extension']) && true === $configuration['extension'];
 
-        if ('_' != substr($prefix, -1)) {
+        if (rtrim($prefix, '_)') === $prefix) {
             $prefix .= '($|_)';
         }
 
