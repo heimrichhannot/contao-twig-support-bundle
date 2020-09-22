@@ -1,7 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.2.0] - 2020-09-18
+## [0.2.1] - 2020-09-22
+- fixed missing BeforeParseTwigTemplateEvent::setTemplateName()
+
+## [0.2.0] - 2020-09-21
 - added configuration to enable contao template loading
 - added TwigTemplateLocator::getTemplateGroup()
 - added TwigTemplateLocator::getPrefixedFiles()

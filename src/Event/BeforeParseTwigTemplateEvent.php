@@ -56,6 +56,11 @@ class BeforeParseTwigTemplateEvent extends Event
         return $this->contaoTemplate;
     }
 
+    public function setTemplateName(string $templateName): void
+    {
+        $this->templateName = $templateName;
+    }
+
     public function setTemplateData(array $templateData): void
     {
         $this->templateData = $templateData;
