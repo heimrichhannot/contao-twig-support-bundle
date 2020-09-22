@@ -126,13 +126,10 @@ class TwigTemplateLocator
 
         $templateNames = [];
         $disableCache = isset($configuration['disableCache']) && true === $configuration['disableCache'];
-        $extension = isset($configuration['extension']) && true === $configuration['extension'];
 
         foreach ($prefixes as $prefix) {
             $templateNames = array_merge($templateNames,
-                $this->getPrefixedFiles($prefix,
-                    $extension,
-                    $disableCache)
+                $this->getPrefixedFiles($prefix, $configuration)
             );
         }
 
