@@ -20,6 +20,7 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 use Webmozart\PathUtil\Path;
 
 class TwigTemplateLocator
@@ -33,16 +34,26 @@ class TwigTemplateLocator
      */
     protected $contaoResourceFinder;
 
-    protected RequestStack $requestStack;
+    protected $requestStack;
 
-    protected ScopeMatcher $scopeMatcher;
+    protected $scopeMatcher;
 
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher)
+    /**
+     * @var array|null
+     */
+    protected $templates;
+    /**
+     * @var Stopwatch
+     */
+    protected $stopwatch;
+
+    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch)
     {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -221,25 +232,29 @@ class TwigTemplateLocator
      */
     public function getTemplates(bool $extension = false, bool $disableCache = false): array
     {
-        if ('dev' !== $this->kernel->getEnvironment() && !$disableCache) {
-            $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
+        if (!$this->templates) {
+            if ('dev' !== $this->kernel->getEnvironment() && !$disableCache) {
+                $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
 
-            if ($extension) {
-                $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
+                if ($extension) {
+                    $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
+                }
+
+                $cache = new FilesystemAdapter(TemplateCache::CACHE_POOL_NAME);
+                $cacheItem = $cache->getItem($cacheKey);
+
+                if (!$cacheItem->isHit()) {
+                    $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
+                    $cache->save($cacheItem);
+                }
+
+                $this->templates = $cache->getItem($cacheKey)->get();
             }
 
-            $cache = new FilesystemAdapter(TemplateCache::CACHE_POOL_NAME);
-            $cacheItem = $cache->getItem($cacheKey);
-
-            if (!$cacheItem->isHit()) {
-                $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
-                $cache->save($cacheItem);
-            }
-
-            return $cache->getItem($cacheKey)->get();
+            $this->templates = $this->generateContaoTwigTemplatePaths(false);
         }
 
-        return $this->generateContaoTwigTemplatePaths(false);
+        return $this->templates;
     }
 
     /**
@@ -249,6 +264,9 @@ class TwigTemplateLocator
      */
     public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
     {
+        $stopwatchname = 'TwigTemplateLocator::getTwigTemplatesInPath()';
+        $this->stopwatch->start($stopwatchname);
+
         if (is_iterable($dir)) {
             $files = $dir;
         } elseif (\is_string($dir)) {
@@ -273,6 +291,7 @@ class TwigTemplateLocator
                 $twigFiles[$name]['paths'][] = "@$twigKey/".$file->getRelativePathname();
             }
         }
+        $this->stopwatch->stop($stopwatchname);
 
         return $twigFiles;
     }

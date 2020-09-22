@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.4] - 2020-09-22
+- fixed performance issue in dev mode
+- added stopwatch to TwigTemplateLocator for better debugging
+- fixed php lang level errors
+
 ## [0.2.3] - 2020-09-22
 - fixed issue with regex TwigTemplateLocator::getPrefixedFiles()
 
