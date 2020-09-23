@@ -110,8 +110,12 @@ class RenderListener
         $this->templates = $this->templateLocator->getTemplates(false);
 
         if ($this->scopeMatcher->isBackendRequest($request)) {
+            $templates = TemplateLoader::getFiles();
+
             foreach ($this->templates as $templateName => $templatePath) {
-                TemplateLoader::addFile($templateName, $this->templateLocator->getTemplatePath($templateName));
+                if (!\array_key_exists($templateName, $templates)) {
+                    TemplateLoader::addFile($templateName, $this->templateLocator->getTemplatePath($templateName));
+                }
             }
         }
     }
