@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2020-12-08
+- added some unit tests
+- fixed options parameter not evaluated in TwigTemplateLocator::getTemplatePath()
+- fixed template loading order not respected when no theme folder set
+
 ## [0.2.5] - 2020-09-23
 - only add templates to contao template loader if they not exist -> fix error with rsce
 

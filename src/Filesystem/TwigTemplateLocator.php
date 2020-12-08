@@ -68,7 +68,7 @@ class TwigTemplateLocator
     {
         $templateName = basename($templateName);
         $themeFolder = '';
-        $disableCache = isset($configuration['disableCache']) && true === $configuration['disableCache'];
+        $disableCache = isset($options['disableCache']) && true === $options['disableCache'];
 
         if ($this->scopeMatcher->isFrontendRequest($this->requestStack->getCurrentRequest())) {
             /* @var PageModel $objPage */
@@ -91,14 +91,16 @@ class TwigTemplateLocator
 
         $template = $templates[$templateName];
 
-        if ('templates' === substr($themeFolder, 0, 9)) {
-            $themeFolder = trim(substr($themeFolder, 9), '/');
-        }
-        $pathLength = \strlen($themeFolder);
+        if (!empty($themeFolder)) {
+            if ('templates' === substr($themeFolder, 0, 9)) {
+                $themeFolder = trim(substr($themeFolder, 9), '/');
+            }
+            $pathLength = \strlen($themeFolder);
 
-        foreach ($template['paths'] as $path) {
-            if ($themeFolder === substr($path, 0, $pathLength)) {
-                return $path;
+            foreach ($template['paths'] as $path) {
+                if ($themeFolder === substr($path, 0, $pathLength)) {
+                    return $path;
+                }
             }
         }
 
@@ -233,7 +235,9 @@ class TwigTemplateLocator
     public function getTemplates(bool $extension = false, bool $disableCache = false): array
     {
         if (!$this->templates) {
-            if ('dev' !== $this->kernel->getEnvironment() && !$disableCache) {
+            if ('dev' === $this->kernel->getEnvironment() || $disableCache) {
+                $this->templates = $this->generateContaoTwigTemplatePaths(false);
+            } else {
                 $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
 
                 if ($extension) {
@@ -247,11 +251,8 @@ class TwigTemplateLocator
                     $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
                     $cache->save($cacheItem);
                 }
-
                 $this->templates = $cache->getItem($cacheKey)->get();
             }
-
-            $this->templates = $this->generateContaoTwigTemplatePaths(false);
         }
 
         return $this->templates;
@@ -307,8 +308,8 @@ class TwigTemplateLocator
         $twigFiles = [];
 
         if (\is_array($bundles)) {
-            foreach ($bundles as $key => $value) {
-                $path = $this->kernel->locateResource("@$key");
+            foreach ($bundles as $key => $bundle) {
+                $path = $bundle->getPath();
 
                 $dir = rtrim($path, '/').'/Resources/views';
 
