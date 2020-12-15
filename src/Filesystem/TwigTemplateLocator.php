@@ -127,7 +127,7 @@ class TwigTemplateLocator
      * @param string          $strDefaultTemplate
      * @param string          $fileExtension
      */
-    public function getTemplateGroup($prefixes, array $configuration = [])
+    public function getTemplateGroup($prefixes, array $configuration = []): array
     {
         if (!\is_array($prefixes) && !\is_string($prefixes)) {
             throw new \InvalidArgumentException('Only string or array are allowed!');
@@ -299,10 +299,8 @@ class TwigTemplateLocator
 
     /**
      * Return all twig file paths in the typical folders.
-     *
-     * @return array
      */
-    protected function generateContaoTwigTemplatePaths(bool $extension = false)
+    protected function generateContaoTwigTemplatePaths(bool $extension = false): array
     {
         $bundles = $this->kernel->getBundles();
         $twigFiles = [];
