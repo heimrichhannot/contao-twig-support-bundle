@@ -251,7 +251,14 @@ class TwigTemplateLocator
                     $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
                     $cache->save($cacheItem);
                 }
-                $this->templates = $cache->getItem($cacheKey)->get();
+                $templates = $cache->getItem($cacheKey)->get();
+
+                if (!\is_array($templates)) {
+                    // clean invalid cache entry
+                    $templates = $this->generateContaoTwigTemplatePaths(false);
+                    $cache->deleteItem($cacheKey);
+                }
+                $this->templates = $templates;
             }
         }
 

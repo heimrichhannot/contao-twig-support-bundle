@@ -90,7 +90,7 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             'resource_finder' => $resourceFinder,
             'scope_matcher' => $scopeMather,
         ]);
-        $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text'));
+        $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
 
         [$kernel, $resourceFinder] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'mixed');
         $scopeMather = $this->createMock(ScopeMatcher::class);

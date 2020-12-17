@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2020-12-17
+- clean invalid cache entries in TwigTemplateLocator
+
 ## [0.2.7] - 2020-12-15
 - added missing return types on two methods in TwigTemplateLocator
 
