@@ -65,8 +65,11 @@ This bundle is a great base if you want to use twig in your own bundles. Use the
 ```yaml
 huh_twig_support:
 
-    # Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).
-    enable_template_loader: false
+  # Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).
+  enable_template_loader: false
+
+  # Template cache lifetime in seconds with a value 0 causing cache to be stored indefinitely (i.e. until the files are deleted).
+  template_cache_lifetime: 0
 ```
 
 ## Credits
