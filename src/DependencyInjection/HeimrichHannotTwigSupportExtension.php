@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -26,6 +26,7 @@ class HeimrichHannotTwigSupportExtension extends Extension
         $configuration = new Configuration();
         $bundleConfig = $this->processConfiguration($configuration, $configs);
         $container->setParameter('huh_twig_support', $bundleConfig);
+        $container->setParameter('huh_twig_support.template_cache_lifetime', $bundleConfig['template_cache_lifetime'] ?: 0);
     }
 
     public function getAlias()

@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.9] - 2021-91-11
+- template cache refactored as service
+- template cache has now a configurable lifetime
+- template cache now saved project cache folder
+- added github actions test workflow setup
+
 ## [0.2.8] - 2020-12-17
 - clean invalid cache entries in TwigTemplateLocator
 

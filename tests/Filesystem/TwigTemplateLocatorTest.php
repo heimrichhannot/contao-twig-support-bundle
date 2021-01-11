@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -13,6 +13,7 @@ use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\TestCase\ContaoTestCase;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -41,12 +42,17 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             $parameter['request_stack']->method('getCurrentRequest')->willReturn($this->createMock(Request::class));
         }
 
+        if (!isset($parameter['cache'])) {
+            $parameter['cache'] = $this->createMock(FilesystemAdapter::class);
+        }
+
         return new TwigTemplateLocator(
             $parameter['kernel'],
             $parameter['resource_finder'],
             $parameter['request_stack'],
             $parameter['scope_matcher'],
-            $this->createMock(Stopwatch::class)
+            $this->createMock(Stopwatch::class),
+            $parameter['cache']
         );
     }
 

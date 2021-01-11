@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -23,7 +23,11 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('enable_template_loader')
                     ->defaultFalse()
                     ->info('Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).')
-                    ->end()
+                ->end()
+                ->integerNode('template_cache_lifetime')
+                    ->defaultValue(0)
+                    ->info('Template cache lifetime in seconds with a value 0 causing cache to be stored indefinitely (i.e. until the files are deleted).')
+                ->end()
             ->end()
         ;
 

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -46,14 +46,19 @@ class TwigTemplateLocator
      * @var Stopwatch
      */
     protected $stopwatch;
+    /**
+     * @var FilesystemAdapter
+     */
+    protected $templateCache;
 
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch)
+    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache)
     {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
         $this->stopwatch = $stopwatch;
+        $this->templateCache = $templateCache;
     }
 
     /**
@@ -244,19 +249,18 @@ class TwigTemplateLocator
                     $cacheKey = TemplateCache::TEMPLATES_WITH_EXTENSION_CACHE_KEY;
                 }
 
-                $cache = new FilesystemAdapter(TemplateCache::CACHE_POOL_NAME);
-                $cacheItem = $cache->getItem($cacheKey);
+                $cacheItem = $this->templateCache->getItem($cacheKey);
 
                 if (!$cacheItem->isHit()) {
                     $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
-                    $cache->save($cacheItem);
+                    $this->templateCache->save($cacheItem);
                 }
-                $templates = $cache->getItem($cacheKey)->get();
+                $templates = $this->templateCache->getItem($cacheKey)->get();
 
                 if (!\is_array($templates)) {
                     // clean invalid cache entry
                     $templates = $this->generateContaoTwigTemplatePaths(false);
-                    $cache->deleteItem($cacheKey);
+                    $this->templateCache->deleteItem($cacheKey);
                 }
                 $this->templates = $templates;
             }

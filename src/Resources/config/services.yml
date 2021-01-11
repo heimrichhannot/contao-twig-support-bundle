@@ -6,6 +6,7 @@ services:
       $rootDir: '%kernel.project_dir%'
       $env: '%kernel.environment%'
       $bundleConfig: '%huh_twig_support%'
+      $templateCache: '@huh_twig_support.cache.templates'
 
   HeimrichHannot\TwigSupportBundle\EventListener\RenderListener:
     public: true
@@ -14,3 +15,9 @@ services:
   HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator:
     public: true
   HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper: ~
+  huh_twig_support.cache.templates:
+    class: Symfony\Component\Cache\Adapter\FilesystemAdapter
+    arguments:
+      - !php/const HeimrichHannot\TwigSupportBundle\Cache\TemplateCache::CACHE_POOL_NAME
+      - '%huh_twig_support.template_cache_lifetime%'
+      - '%kernel.cache_dir%'
