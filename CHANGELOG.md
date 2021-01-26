@@ -1,7 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.2.9] - 2021-91-11
+## [0.2.10] - 2021-01-26
+- fixed TwigTemplateLocator::getTemplates() not respecting extension flag (#3)
+
+## [0.2.9] - 2021-01-11
 - template cache refactored as service
 - template cache has now a configurable lifetime
 - template cache now saved project cache folder

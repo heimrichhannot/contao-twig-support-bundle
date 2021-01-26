@@ -82,7 +82,13 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             'kernel' => $kernel,
             'resource_finder' => $resourceFinder,
         ]);
-        $this->assertNotEmpty($instance->getTemplates(false, true));
+        $templates = $instance->getTemplates(false, true);
+        $this->assertNotEmpty($templates);
+        $this->assertArrayHasKey('ce_text', $templates);
+
+        $templates = $instance->getTemplates(true, true);
+        $this->assertNotEmpty($templates);
+        $this->assertArrayHasKey('ce_text.html.twig', $templates);
     }
 
     public function testGetTemplatePath()

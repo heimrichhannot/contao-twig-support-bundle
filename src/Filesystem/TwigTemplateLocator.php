@@ -42,6 +42,8 @@ class TwigTemplateLocator
      * @var array|null
      */
     protected $templates;
+    /** @var array|null */
+    protected $templateWithExtension;
     /**
      * @var Stopwatch
      */
@@ -239,9 +241,15 @@ class TwigTemplateLocator
      */
     public function getTemplates(bool $extension = false, bool $disableCache = false): array
     {
-        if (!$this->templates) {
+        if ($extension) {
+            $templates = &$this->templateWithExtension;
+        } else {
+            $templates = &$this->templates;
+        }
+
+        if (!$templates) {
             if ('dev' === $this->kernel->getEnvironment() || $disableCache) {
-                $this->templates = $this->generateContaoTwigTemplatePaths(false);
+                $templates = $this->generateContaoTwigTemplatePaths($extension);
             } else {
                 $cacheKey = TemplateCache::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY;
 
@@ -255,18 +263,18 @@ class TwigTemplateLocator
                     $cacheItem->set($this->generateContaoTwigTemplatePaths(false));
                     $this->templateCache->save($cacheItem);
                 }
-                $templates = $this->templateCache->getItem($cacheKey)->get();
+                $cachedTemplates = $this->templateCache->getItem($cacheKey)->get();
 
-                if (!\is_array($templates)) {
+                if (!\is_array($cachedTemplates)) {
                     // clean invalid cache entry
-                    $templates = $this->generateContaoTwigTemplatePaths(false);
+                    $cachedTemplates = $this->generateContaoTwigTemplatePaths(false);
                     $this->templateCache->deleteItem($cacheKey);
                 }
-                $this->templates = $templates;
+                $templates = $cachedTemplates;
             }
         }
 
-        return $this->templates;
+        return $templates;
     }
 
     /**
