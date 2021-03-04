@@ -58,7 +58,27 @@ BeforeRenderTwigTemplate | Dispatched before twig templates is rendered.
 
 ### Use twig in your bundle
 
-This bundle is a great base if you want to use twig in your own bundles. Use the `HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator` service to load your templates, where you need them while keeping the contao template hierarchy. 
+This bundle is a great base if you want to use twig in your own bundles. Use the `HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator` service to load your templates, where you need them while keeping the contao template hierarchy (you can override a bundle template in your project template folder or in another bundle which is loaded after the bundle).
+
+```php
+use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
+use Twig\Environment;
+
+function showTemplateLocatorUsage(TwigTemplateLocator $templateLocator, Environment $twig) {
+    $twigTemplatePath = $templateLocator->getTemplatePath('my_custom_template');
+    $buffer = $twig->render($twigTemplatePath, ['foo' => 'bar']);
+}
+```
+
+There is also a `TwigFrontendTemplate` class which inherits from the contao FrontendTemplate class and can be used to render twig template in contao context and use all hooks and template class functions.
+
+```php
+use HeimrichHannot\TwigSupportBundle\Template\TwigFrontendTemplate;
+
+$template = new TwigFrontendTemplate('my_custom_template');
+$template->setData(['foo' => 'bar']);
+return $template->getResponse();
+```
 
 ## Configuration reference
 

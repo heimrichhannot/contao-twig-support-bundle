@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.11] - 2021-03-04
+- added TwigFrontendTemplate class
+
 ## [0.2.10] - 2021-01-26
 - fixed TwigTemplateLocator::getTemplates() not respecting extension flag (#3)
 
