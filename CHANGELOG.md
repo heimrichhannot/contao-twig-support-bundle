@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.12] - 2021-03-19
+- add widget variable to widget templates (#4)
+
 ## [0.2.11] - 2021-03-04
 - added TwigFrontendTemplate class
 
