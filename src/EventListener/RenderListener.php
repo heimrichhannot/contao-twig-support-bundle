@@ -196,18 +196,22 @@ class RenderListener
 
         $twigTemplatePath = $this->templateLocator->getTemplatePath($twigTemplateName);
 
-        $twigTemplateData['id'] = $twigTemplateData['id'] ?? ($twigTemplateData['strId'] ?? null);
-        $twigTemplateData['name'] = $twigTemplateData['name'] ?? ($twigTemplateData['strName'] ?? null);
-        $twigTemplateData['label'] = $twigTemplateData['label'] ?? ($twigTemplateData['strLabel'] ?? null);
-        $twigTemplateData['description'] = $twigTemplateData['description'] ?? ($twigTemplateData['arrConfiguration']['description'] ?? null);
-        $twigTemplateData['value'] = $twigTemplateData['value'] ?? ($twigTemplateData['varValue'] ?? null);
-        $twigTemplateData['class'] = $twigTemplateData['class'] ?? ($twigTemplateData['strClass'] ?? null);
-        $twigTemplateData['prefix'] = $twigTemplateData['prefix'] ?? ($twigTemplateData['strPrefix'] ?? null);
+        if ($contaoTemplate instanceof Widget) {
+            $twigTemplateData['id'] = $twigTemplateData['id'] ?? ($twigTemplateData['strId'] ?? null);
+            $twigTemplateData['name'] = $twigTemplateData['name'] ?? ($twigTemplateData['strName'] ?? null);
+            $twigTemplateData['label'] = $twigTemplateData['label'] ?? ($twigTemplateData['strLabel'] ?? null);
+            $twigTemplateData['description'] = $twigTemplateData['description'] ?? ($twigTemplateData['arrConfiguration']['description'] ?? null);
+            $twigTemplateData['value'] = $twigTemplateData['value'] ?? ($twigTemplateData['varValue'] ?? null);
+            $twigTemplateData['class'] = $twigTemplateData['class'] ?? ($twigTemplateData['strClass'] ?? null);
+            $twigTemplateData['prefix'] = $twigTemplateData['prefix'] ?? ($twigTemplateData['strPrefix'] ?? null);
 
-        $twigTemplateData['template'] = $twigTemplateData['template'] ?? ($twigTemplateData['strTemplate'] ?? null);
-        $twigTemplateData['wizard'] = $twigTemplateData['wizard'] ?? ($twigTemplateData['strWizard'] ?? null);
-        $twigTemplateData['required'] = $twigTemplateData['required'] ?? ($twigTemplateData['arrConfiguration']['required'] ?? null);
-        $twigTemplateData['forAttribute'] = $twigTemplateData['forAttribute'] ?? ($twigTemplateData['blnForAttribute'] ?? null);
+            $twigTemplateData['template'] = $twigTemplateData['template'] ?? ($twigTemplateData['strTemplate'] ?? null);
+            $twigTemplateData['wizard'] = $twigTemplateData['wizard'] ?? ($twigTemplateData['strWizard'] ?? null);
+            $twigTemplateData['required'] = $twigTemplateData['required'] ?? ($twigTemplateData['arrConfiguration']['required'] ?? null);
+            $twigTemplateData['forAttribute'] = $twigTemplateData['forAttribute'] ?? ($twigTemplateData['blnForAttribute'] ?? null);
+
+            $twigTemplateData['widget'] = $contaoTemplate;
+        }
 
         /** @var BeforeRenderTwigTemplateEvent $event */
         /** @noinspection PhpMethodParametersCountMismatchInspection */
