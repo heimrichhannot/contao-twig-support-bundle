@@ -3,8 +3,6 @@ services:
     autowire: true
     autoconfigure: true
     bind:
-      $rootDir: '%kernel.project_dir%'
-      $env: '%kernel.environment%'
       $bundleConfig: '%huh_twig_support%'
       $templateCache: '@huh_twig_support.cache.templates'
 

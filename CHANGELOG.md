@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.13] - 2021-03-19
+- fixed warnung due unused binds
+
 ## [0.2.12] - 2021-03-19
 - add widget variable to widget templates (#4)
 
