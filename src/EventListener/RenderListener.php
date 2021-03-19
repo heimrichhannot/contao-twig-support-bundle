@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -46,10 +46,6 @@ class RenderListener
      */
     protected $twig;
     /**
-     * @var string
-     */
-    protected $env;
-    /**
      * @var KernelInterface
      */
     protected $kernel;
@@ -77,13 +73,11 @@ class RenderListener
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, string $rootDir, EventDispatcherInterface $eventDispatcher, Environment $twig, string $env, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig)
+    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, Environment $twig, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig)
     {
         $this->templateLocator = $templateLocator;
-        $this->rootDir = $rootDir;
         $this->eventDispatcher = $eventDispatcher;
         $this->twig = $twig;
-        $this->env = $env;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
         $this->normalizer = $normalizer;
@@ -195,6 +189,10 @@ class RenderListener
         $twigTemplateData = $contaoTemplate->{static::TWIG_CONTEXT};
 
         $twigTemplatePath = $this->templateLocator->getTemplatePath($twigTemplateName);
+
+        if ($contaoTemplate instanceof Widget) {
+            $twigTemplateData['widget'] = $contaoTemplate;
+        }
 
         /** @var BeforeRenderTwigTemplateEvent $event */
         /** @noinspection PhpMethodParametersCountMismatchInspection */
