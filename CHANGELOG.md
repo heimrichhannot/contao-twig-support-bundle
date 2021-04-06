@@ -1,8 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.14] - 2021-04-06
+- allow twig 3
+- changed TwigFrontendTemplate to use RenderListener::render() method
+
 ## [0.2.13] - 2021-03-19
-- fixed warnung due unused binds
+- fixed warning due unused binds
 
 ## [0.2.12] - 2021-03-19
 - add widget variable to widget templates (#4)

@@ -8,14 +8,9 @@
 
 namespace HeimrichHannot\TwigSupportBundle\Template;
 
-use Contao\Config;
 use Contao\FrontendTemplate;
 use Contao\System;
-use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
-use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
+use HeimrichHannot\TwigSupportBundle\EventListener\RenderListener;
 
 class TwigFrontendTemplate extends FrontendTemplate
 {
@@ -23,37 +18,10 @@ class TwigFrontendTemplate extends FrontendTemplate
     {
         $container = System::getContainer();
 
-        if ($container->has(TwigTemplateLocator::class) && $container->has('twig')) {
-            if (null === $this->strTemplate) {
-                return '';
-            }
-
-            try {
-                $twigTemplatePath = $container->get(TwigTemplateLocator::class)->getTemplatePath($this->strTemplate);
-            } catch (TemplateNotFoundException $e) {
-                return '';
-            }
-
-            try {
-                $buffer = $container->get('twig')->render($twigTemplatePath, $this->getTwigContext());
-            } catch (LoaderError | RuntimeError | SyntaxError $e) {
-                return '';
-            }
-
-            if (Config::get('debugMode')) {
-                $buffer = "\n<!-- TWIG TEMPLATE START: $twigTemplatePath -->\n$buffer\n<!-- TWIG TEMPLATE END: $twigTemplatePath -->\n";
-            }
-
-            return $buffer;
+        if ($container->has(RenderListener::class)) {
+            return $container->get(RenderListener::class)->render($this);
         }
 
         return parent::inherit();
-    }
-
-    protected function getTwigContext(): array
-    {
-        $context = $this->arrData;
-
-        return $context;
     }
 }
