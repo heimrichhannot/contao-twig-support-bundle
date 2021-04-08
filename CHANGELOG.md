@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.15] - 2021-04-08
+- fixed TwigFrontendTemplate not working when template loader is not activated
+- fixed misleading exception when template not found in TwigFrontendTemplate
+
 ## [0.2.14] - 2021-04-06
 - allow twig 3
 - changed TwigFrontendTemplate to use RenderListener::render() method

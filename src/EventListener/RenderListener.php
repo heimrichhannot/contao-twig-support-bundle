@@ -15,6 +15,7 @@ use Contao\TemplateLoader;
 use Contao\Widget;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
+use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -119,26 +120,15 @@ class RenderListener
      */
     public function onParseTemplate(Template $contaoTemplate): void
     {
-        $templateName = $contaoTemplate->getName();
-
-        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName])) {
+        if (!$this->enableTemplateLoader) {
             return;
         }
 
-        $templateData = $contaoTemplate->getData();
-
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        /** @noinspection PhpParamsInspection */
-        $event = $this->eventDispatcher->dispatch(
-            BeforeParseTwigTemplateEvent::NAME,
-            new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
-        );
-
-        $contaoTemplate->setName('twig_template_proxy');
-        $contaoTemplate->setData([
-            static::TWIG_TEMPLATE => $event->getTemplateName(),
-            static::TWIG_CONTEXT => $event->getTemplateData(),
-        ]);
+        try {
+            $this->prepareContaoTemplate($contaoTemplate);
+        } catch (TemplateNotFoundException $e) {
+            return;
+        }
     }
 
     /**
@@ -214,5 +204,32 @@ class RenderListener
         }
 
         return $buffer;
+    }
+
+    /**
+     * Prepare a contao template for twig.
+     */
+    public function prepareContaoTemplate(Template $contaoTemplate): void
+    {
+        $templateName = $contaoTemplate->getName();
+
+        if (!isset($this->templates[$templateName])) {
+            throw new TemplateNotFoundException("Twig template '".$templateName."' could not be found.");
+        }
+
+        $templateData = $contaoTemplate->getData();
+
+        /** @noinspection PhpMethodParametersCountMismatchInspection */
+        /** @noinspection PhpParamsInspection */
+        $event = $this->eventDispatcher->dispatch(
+            BeforeParseTwigTemplateEvent::NAME,
+            new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
+        );
+
+        $contaoTemplate->setName('twig_template_proxy');
+        $contaoTemplate->setData([
+            static::TWIG_TEMPLATE => $event->getTemplateName(),
+            static::TWIG_CONTEXT => $event->getTemplateData(),
+        ]);
     }
 }

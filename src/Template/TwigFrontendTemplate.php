@@ -19,6 +19,10 @@ class TwigFrontendTemplate extends FrontendTemplate
         $container = System::getContainer();
 
         if ($container->has(RenderListener::class)) {
+            if ('twig_template_proxy' !== $this->getName()) {
+                $container->get(RenderListener::class)->prepareContaoTemplate($this);
+            }
+
             return $container->get(RenderListener::class)->render($this);
         }
 
