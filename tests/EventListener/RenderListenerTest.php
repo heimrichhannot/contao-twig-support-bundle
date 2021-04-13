@@ -15,6 +15,7 @@ use Contao\Widget;
 use HeimrichHannot\TwigSupportBundle\EventListener\RenderListener;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
+use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -58,14 +59,16 @@ class RenderListenerTest extends ContaoTestCase
             $parameters['bundleConfig'] = [];
         }
 
+        $templateRenderer = $parameters['templateRenderer'] ?? $this->createMock(TwigTemplateRenderer::class);
+
         $instance = new RenderListener(
             $parameters['templateLocator'],
             $parameters['eventDispatcher'],
-            $parameters['twig'],
             $parameters['requestStack'],
             $parameters['scopeMatcher'],
             $parameters['normalizer'],
-            $parameters['bundleConfig']
+            $parameters['bundleConfig'],
+            $templateRenderer
         );
 
         return $instance;
@@ -73,8 +76,8 @@ class RenderListenerTest extends ContaoTestCase
 
     public function testRender()
     {
-        $twig = $this->createMock(Environment::class);
-        $twig->method('render')->willReturnCallback(function ($template, $data) {
+        $templateRenderer = $this->createMock(TwigTemplateRenderer::class);
+        $templateRenderer->method('render')->willReturnCallback(function ($template, $data) {
             TestCase::assertArrayHasKey('widget', $data);
 
             return $template;
@@ -84,12 +87,12 @@ class RenderListenerTest extends ContaoTestCase
             RenderListener::TWIG_CONTEXT => [],
         ]);
         $instance = $this->createTestInstance([
-            'twig' => $twig,
+            'templateRenderer' => $templateRenderer,
         ]);
         $instance->render($contaoTemplate);
 
-        $twig = $this->createMock(Environment::class);
-        $twig->method('render')->willReturnCallback(function ($template, $data) {
+        $templateRenderer = $this->createMock(TwigTemplateRenderer::class);
+        $templateRenderer->method('render')->willReturnCallback(function ($template, $data) {
             TestCase::assertArrayNotHasKey('widget', $data);
 
             return $template;
@@ -99,7 +102,7 @@ class RenderListenerTest extends ContaoTestCase
             RenderListener::TWIG_CONTEXT => [],
         ]);
         $instance = $this->createTestInstance([
-            'twig' => $twig,
+            'templateRenderer' => $templateRenderer,
         ]);
         $instance->render($contaoTemplate);
     }

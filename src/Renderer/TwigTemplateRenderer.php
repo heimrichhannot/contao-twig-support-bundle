@@ -47,7 +47,7 @@ class TwigTemplateRenderer
 
         $buffer = null;
 
-        if (null !== $configuration->getTemplatePath()) {
+        if (null === $configuration->getTemplatePath()) {
             try {
                 $templatePath = $this->templateLocator->getTemplatePath($templateName);
             } catch (TemplateNotFoundException $e) {

@@ -22,7 +22,6 @@ use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRendererConfiguration;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Twig\Environment;
 
 class RenderListener
 {
@@ -43,10 +42,6 @@ class RenderListener
      * @var EventDispatcherInterface
      */
     protected $eventDispatcher;
-    /**
-     * @var Environment
-     */
-    protected $twig;
     /**
      * @var KernelInterface
      */
@@ -79,20 +74,19 @@ class RenderListener
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, Environment $twig, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
+    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
     {
         $this->templateLocator = $templateLocator;
         $this->eventDispatcher = $eventDispatcher;
-        $this->twig = $twig;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
         $this->normalizer = $normalizer;
         $this->bundleConfig = $bundleConfig;
+        $this->twigTemplateRenderer = $twigTemplateRenderer;
 
         if (isset($bundleConfig['enable_template_loader']) && true === $bundleConfig['enable_template_loader']) {
             $this->enableTemplateLoader = true;
         }
-        $this->twigTemplateRenderer = $twigTemplateRenderer;
     }
 
     /**
