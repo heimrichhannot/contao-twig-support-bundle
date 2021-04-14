@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.16] - 2021-04-14
+- Add twig renderer class ([#6])
+
 ## [0.2.15] - 2021-04-08
 - fixed TwigFrontendTemplate not working when template loader is not activated
 - fixed misleading exception when template not found in TwigFrontendTemplate
@@ -85,3 +88,5 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0] - 2020-09-16
 Initial release
+
+[#6]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/6
