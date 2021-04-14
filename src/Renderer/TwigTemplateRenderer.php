@@ -55,6 +55,7 @@ class TwigTemplateRenderer
                     throw $e;
                 }
                 $buffer = '';
+                $templatePath = 'Template not found: '.$templateName;
             }
         } else {
             $templatePath = $configuration->getTemplatePath();
