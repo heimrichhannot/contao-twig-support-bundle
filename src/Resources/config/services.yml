@@ -13,6 +13,9 @@ services:
   HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator:
     public: true
   HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper: ~
+  HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer:
+    public: true
+
   huh_twig_support.cache.templates:
     class: Symfony\Component\Cache\Adapter\FilesystemAdapter
     arguments:

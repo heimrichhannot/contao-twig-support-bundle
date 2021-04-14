@@ -20,6 +20,11 @@ use Twig\Error\LoaderError;
 
 class TwigTemplateRendererTest extends ContaoTestCase
 {
+    /**
+     * @return TwigTemplateRenderer
+     *
+     * @runInSeparateProcess
+     */
     public function createTestInstance(array $parameters = [])
     {
         $twig = $parameters['twig'] ?? $this->createMock(Environment::class);
