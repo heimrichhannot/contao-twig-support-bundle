@@ -66,7 +66,30 @@ BeforeRenderTwigTemplate | Dispatched before twig templates is rendered.
 
 ### Use twig in your bundle
 
-This bundle is a great base if you want to use twig in your own bundles. Use the `HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator` service to load your templates, where you need them while keeping the contao template hierarchy (you can override a bundle template in your project template folder or in another bundle which is loaded after the bundle).
+This bundle is a great base if you want to use twig in your own bundles.
+
+#### Template locator
+
+Use the `TwigTemplateLocator` service to load your templates, where you need them while keeping the contao template hierarchy (you can override a bundle template in your project template folder or in another bundle which is loaded after the bundle).
+
+Get all Templates with prefix (like Controller::getTemplateGroup): `TwigTemplateLocator::getTemplateGroup()`
+
+```php
+class CustomContainer
+{
+    /**
+     * @var HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator
+     */
+    protected $templateLocator;
+
+    public function onTemplateOptionsCallback()
+    {
+        return $this->templateLocator->getTemplateGroup('subscribe_button_');
+    }
+}
+```
+
+Get the twig path from an template name:
 
 ```php
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
@@ -78,7 +101,38 @@ function showTemplateLocatorUsage(TwigTemplateLocator $templateLocator, Environm
 }
 ```
 
-There is also a `TwigFrontendTemplate` class which inherits from the contao FrontendTemplate class and can be used to render twig template in contao context and use all hooks and template class functions.
+#### Template renderer
+
+Use the `TwigTemplateRenderer` service to render a template by template name. The renderer adds template comments in dev mode as contao does for html5 templates.  There are additional config options to customize the renderer or render a specific twig template instead of using the template locator to get the correct path to an template name. If you need to add specific logic applied before or after rendering, we recommend to [decorate the service](https://symfony.com/doc/current/service_container/service_decoration.html).
+
+```php
+use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
+use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRendererConfiguration;
+
+class MyCustomController {
+
+    /** @var TwigTemplateRenderer */
+    protected $twigTemplateRenderer;
+
+    public function renderAction(string $templateName = 'mod_default', array $templateData = []): string
+    {
+        $buffer = $this->twigTemplateRenderer->render($templateName, $templateData);
+        
+        // Or pass some configuration:
+        
+        $configuration = (new TwigTemplateRendererConfiguration())
+                                ->setShowTemplateComments(false)
+                                ->setTemplatePath('@AcmeBundle/module/mod_custom.html.twig')
+                                ->setThrowExceptionOnError(false);
+                                
+        return $this->twigTemplateRenderer->render($templateName, $templateData, $configuration);
+    }
+}
+```
+
+#### TwigFrontendTemplate
+
+You can use the `TwigFrontendTemplate` class to work with a twig template as it's a normal contao frontend template object. It inherits from the contao FrontendTemplate class and can be used to render twig template in contao context and use all hooks and template class functions.
 
 ```php
 use HeimrichHannot\TwigSupportBundle\Template\TwigFrontendTemplate;

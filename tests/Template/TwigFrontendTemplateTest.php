@@ -15,6 +15,9 @@ use HeimrichHannot\TwigSupportBundle\Template\TwigFrontendTemplate;
 
 class TwigFrontendTemplateTest extends ContaoTestCase
 {
+    /**
+     * @runInSeparateProcess
+     */
     public function testInherit()
     {
         $instance = $this->getMockBuilder(TwigFrontendTemplate::class)->disableOriginalConstructor()->setMethods(null)->getMock();

@@ -8,7 +8,6 @@
 
 namespace HeimrichHannot\TwigSupportBundle\EventListener;
 
-use Contao\Config;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\Template;
 use Contao\TemplateLoader;
@@ -18,10 +17,11 @@ use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
+use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
+use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRendererConfiguration;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Twig\Environment;
 
 class RenderListener
 {
@@ -42,10 +42,6 @@ class RenderListener
      * @var EventDispatcherInterface
      */
     protected $eventDispatcher;
-    /**
-     * @var Environment
-     */
-    protected $twig;
     /**
      * @var KernelInterface
      */
@@ -70,19 +66,23 @@ class RenderListener
      * @var bool
      */
     protected $enableTemplateLoader = false;
+    /**
+     * @var TwigTemplateRenderer
+     */
+    protected $twigTemplateRenderer;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, Environment $twig, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig)
+    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
     {
         $this->templateLocator = $templateLocator;
         $this->eventDispatcher = $eventDispatcher;
-        $this->twig = $twig;
         $this->requestStack = $requestStack;
         $this->scopeMatcher = $scopeMatcher;
         $this->normalizer = $normalizer;
         $this->bundleConfig = $bundleConfig;
+        $this->twigTemplateRenderer = $twigTemplateRenderer;
 
         if (isset($bundleConfig['enable_template_loader']) && true === $bundleConfig['enable_template_loader']) {
             $this->enableTemplateLoader = true;
@@ -172,6 +172,11 @@ class RenderListener
      * Render the template.
      *
      * @param $contaoTemplate
+     *
+     * @throws TemplateNotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function render($contaoTemplate): string
     {
@@ -196,14 +201,9 @@ class RenderListener
             $contaoTemplate->setData($event->getTemplateData());
         }
 
-        $buffer = $this->twig->render($event->getTwigTemplatePath(), $event->getTemplateData());
+        $rendererConfiguration = (new TwigTemplateRendererConfiguration())->setTemplatePath($event->getTwigTemplatePath());
 
-        if (Config::get('debugMode')) {
-            $strRelPath = $event->getTwigTemplatePath();
-            $buffer = "\n<!-- TWIG TEMPLATE START: $strRelPath -->\n$buffer\n<!-- TWIG TEMPLATE END: $strRelPath -->\n";
-        }
-
-        return $buffer;
+        return $this->twigTemplateRenderer->render($twigTemplateName, $event->getTemplateData(), $rendererConfiguration);
     }
 
     /**
