@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2021-04-14
+Same as 0.2.16 for transition.
+
 ## [0.2.16] - 2021-04-14
 - Add twig renderer class ([#6])
 
