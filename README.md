@@ -4,7 +4,8 @@
 [![CI](https://github.com/heimrichhannot/contao-twig-support-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/heimrichhannot/contao-twig-support-bundle/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/heimrichhannot/contao-twig-support-bundle/badge.svg)](https://coveralls.io/github/heimrichhannot/contao-twig-support-bundle)
 
-A bundle to enable [twig](https://twig.symfony.com/) templates support in contao. Templates are handled like .html5 templates in contao, e.g. you can select them in your custom templates select in the backend and they will be outputted in the frontend. 
+A bundle to enable extensive [twig](https://twig.symfony.com/) templates support in contao. Just activate the template loader and you can work with twig templates as they were .html5 templates. This means, you can select twig templates in the custom template select in the contao backend and you can override any template in your project template folder or in a bundle.
+As a developer, you can use this bundle to work with twig templates like with contao templates, e.g. use simple template names, template groups and rely on the contao template hierarchy. 
 
 ## Features
 * enable twig support in contao
