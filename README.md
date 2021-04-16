@@ -56,13 +56,27 @@ twig:
     '%kernel.project_dir%/templates': ~
 ```
 
+### Skip templates
+
+It may the be case, that other bundle comes with twig templates that are incompatible with core template but have the same name. Or you don't want to process some templates as twig templates. In this case you can add them to the skip templates configuration:
+
+```yaml
+huh_twig_support:
+    skip_templates:
+        - image
+        - ce_no_twig
+        - mod_html5_only
+```
+
+There is also a `SkipTemplateException` that could be thrown in the `BeforeParseTwigTemplateEvent` to skip a template.
+
 ## Developers
 
 ### Events
 
 Event | Description
 ----- | -----------
-BeforeParseTwigTemplateEvent | Dispatched after twig templates was found.
+BeforeParseTwigTemplateEvent | Dispatched after twig templates was found. Throw a `SkipTemplateException` to skip the curent template to be processed as twig template.
 BeforeRenderTwigTemplate | Dispatched before twig templates is rendered.
 
 ### Use twig in your bundle
@@ -146,13 +160,23 @@ return $template->getResponse();
 ## Configuration reference
 
 ```yaml
+# Default configuration for extension with alias: "huh_twig_support"
 huh_twig_support:
 
   # Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).
   enable_template_loader: false
 
+  # Template names that should be skipped by the template loader.
+  skip_templates:
+
+    # Examples:
+    - image
+    - ce_no_twig
+    - mod_html5_only
+
   # Template cache lifetime in seconds with a value 0 causing cache to be stored indefinitely (i.e. until the files are deleted).
   template_cache_lifetime: 0
+
 ```
 
 ## Credits

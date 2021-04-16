@@ -14,6 +14,7 @@ use Contao\TemplateLoader;
 use Contao\Widget;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\Event\BeforeRenderTwigTemplateEvent;
+use HeimrichHannot\TwigSupportBundle\Exception\SkipTemplateException;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
@@ -120,7 +121,7 @@ class RenderListener
      */
     public function onParseTemplate(Template $contaoTemplate): void
     {
-        if (!$this->enableTemplateLoader) {
+        if (!$this->enableTemplateLoader || $this->isSkippedTemplate($contaoTemplate->getName())) {
             return;
         }
 
@@ -138,7 +139,7 @@ class RenderListener
     {
         $templateName = $widget->template;
 
-        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName])) {
+        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName]) || $this->isSkippedTemplate($templateName)) {
             return $buffer;
         }
 
@@ -153,12 +154,16 @@ class RenderListener
             $templateData['arrOptions'] = $templateData['options'];
         }
 
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        /** @noinspection PhpParamsInspection */
-        $event = $this->eventDispatcher->dispatch(
-            BeforeParseTwigTemplateEvent::NAME,
-            new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget)
-        );
+        try {
+            /** @noinspection PhpMethodParametersCountMismatchInspection */
+            /** @noinspection PhpParamsInspection */
+            $event = $this->eventDispatcher->dispatch(
+                BeforeParseTwigTemplateEvent::NAME,
+                new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget)
+            );
+        } catch (SkipTemplateException $e) {
+            return $buffer;
+        }
 
         $widget->{static::TWIG_TEMPLATE} = $event->getTemplateName();
         $widget->{static::TWIG_CONTEXT} = $event->getTemplateData();
@@ -219,17 +224,33 @@ class RenderListener
 
         $templateData = $contaoTemplate->getData();
 
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        /** @noinspection PhpParamsInspection */
-        $event = $this->eventDispatcher->dispatch(
-            BeforeParseTwigTemplateEvent::NAME,
-            new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
-        );
+        try {
+            /** @noinspection PhpMethodParametersCountMismatchInspection */
+            /** @noinspection PhpParamsInspection */
+            $event = $this->eventDispatcher->dispatch(
+                BeforeParseTwigTemplateEvent::NAME,
+                new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
+            );
+        } catch (SkipTemplateException $e) {
+            return;
+        }
 
         $contaoTemplate->setName('twig_template_proxy');
         $contaoTemplate->setData([
             static::TWIG_TEMPLATE => $event->getTemplateName(),
             static::TWIG_CONTEXT => $event->getTemplateData(),
         ]);
+    }
+
+    /**
+     * Check if the template is in the skipped template list.
+     */
+    protected function isSkippedTemplate(string $template): bool
+    {
+        if (!isset($this->bundleConfig['skip_templates']) || empty($this->bundleConfig['skip_templates'])) {
+            return false;
+        }
+
+        return \in_array($template, $this->bundleConfig['skip_templates']);
     }
 }

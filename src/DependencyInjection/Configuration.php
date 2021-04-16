@@ -15,14 +15,25 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('huh_twig_support');
+        $treeBuilder = new TreeBuilder('huh_twig_support');
+
+        // Keep compatibility with symfony/config < 4.2
+        if (!method_exists($treeBuilder, 'getRootNode')) {
+            $rootNode = $treeBuilder->root('huh_twig_support');
+        } else {
+            $rootNode = $treeBuilder->getRootNode();
+        }
 
         $rootNode
             ->children()
                 ->booleanNode('enable_template_loader')
                     ->defaultFalse()
                     ->info('Enable twig templates to be loaded by contao (enabled overriding core templates and select twig templates in the contao backend).')
+                ->end()
+                ->arrayNode('skip_templates')
+                    ->info('Template names that should be skipped by the template loader.')
+            ->example(['image', 'ce_no_twig', 'mod_html5_only'])
+                    ->scalarPrototype()->end()
                 ->end()
                 ->integerNode('template_cache_lifetime')
                     ->defaultValue(0)

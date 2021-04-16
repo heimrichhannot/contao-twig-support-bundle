@@ -10,20 +10,28 @@ namespace HeimrichHannot\TwigSupportBundle\Test\EventListener;
 
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\FrontendTemplate;
+use Contao\Template;
 use Contao\TestCase\ContaoTestCase;
 use Contao\Widget;
+use HeimrichHannot\TestUtilitiesBundle\Mock\TemplateMockTrait;
+use HeimrichHannot\TwigSupportBundle\Event\BeforeParseTwigTemplateEvent;
 use HeimrichHannot\TwigSupportBundle\EventListener\RenderListener;
+use HeimrichHannot\TwigSupportBundle\Exception\SkipTemplateException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
 use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
+use PHPUnit\Framework\MockObject\MockBuilder;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 
 class RenderListenerTest extends ContaoTestCase
 {
-    public function createTestInstance(array $parameters = [])
+    use TemplateMockTrait;
+
+    public function createTestInstance(array $parameters = [], ?MockBuilder $mockBuilder = null)
     {
         if (!isset($parameters['templateLocator'])) {
             $templateLocator = $this->createMock(TwigTemplateLocator::class);
@@ -61,15 +69,27 @@ class RenderListenerTest extends ContaoTestCase
 
         $templateRenderer = $parameters['templateRenderer'] ?? $this->createMock(TwigTemplateRenderer::class);
 
-        $instance = new RenderListener(
-            $parameters['templateLocator'],
-            $parameters['eventDispatcher'],
-            $parameters['requestStack'],
-            $parameters['scopeMatcher'],
-            $parameters['normalizer'],
-            $parameters['bundleConfig'],
-            $templateRenderer
-        );
+        if ($mockBuilder) {
+            $instance = $mockBuilder->setConstructorArgs([
+                $parameters['templateLocator'],
+                $parameters['eventDispatcher'],
+                $parameters['requestStack'],
+                $parameters['scopeMatcher'],
+                $parameters['normalizer'],
+                $parameters['bundleConfig'],
+                $templateRenderer,
+            ])->getMock();
+        } else {
+            $instance = new RenderListener(
+                $parameters['templateLocator'],
+                $parameters['eventDispatcher'],
+                $parameters['requestStack'],
+                $parameters['scopeMatcher'],
+                $parameters['normalizer'],
+                $parameters['bundleConfig'],
+                $templateRenderer
+            );
+        }
 
         return $instance;
     }
@@ -105,5 +125,125 @@ class RenderListenerTest extends ContaoTestCase
             'templateRenderer' => $templateRenderer,
         ]);
         $instance->render($contaoTemplate);
+    }
+
+    public function testOnParseTemplateSkipTemplates()
+    {
+        $mockBuilder = $this->getMockBuilder(RenderListener::class)
+            ->setMethods(['prepareContaoTemplate']);
+        $instance = $this->createTestInstance([
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+            ],
+        ], $mockBuilder);
+        $instance->expects($this->once())->method('prepareContaoTemplate');
+        $template = $this->createMock(Template::class);
+        $template->method('getName')->willReturn('template');
+        $instance->onParseTemplate($template);
+
+        $mockBuilder = $this->getMockBuilder(RenderListener::class)
+            ->setMethods(['prepareContaoTemplate']);
+        $instance = $this->createTestInstance([
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+                'skip_templates' => ['image'],
+            ],
+        ], $mockBuilder);
+        $instance->expects($this->once())->method('prepareContaoTemplate');
+        $template = $this->createMock(Template::class);
+        $template->method('getName')->willReturn('template');
+        $instance->onParseTemplate($template);
+        $template = $this->createMock(Template::class);
+        $template->method('getName')->willReturn('image');
+        $instance->onParseTemplate($template);
+    }
+
+    public function testOnParseWidgetSkipTemplates()
+    {
+        $instance = $this->createTestInstance([
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+                'skip_templates' => ['form_text'],
+            ],
+        ]);
+
+        $reflection = new ReflectionClass($instance);
+        $reflectionProperty = $reflection->getProperty('templates');
+        $reflectionProperty->setAccessible(true);
+
+        $reflectionProperty->setValue($instance, ['form_row' => '', 'form_text' => '']);
+
+        $widget = $this->mockClassWithProperties(Widget::class, ['template' => 'form_row']);
+        $widget->method('inherit')->willReturn('after');
+        $this->assertSame('after', $instance->onParseWidget('before', $widget));
+
+        $widget = $this->mockClassWithProperties(Widget::class, ['template' => 'form_text']);
+        $widget->method('inherit')->willReturn('after');
+        $this->assertSame('before', $instance->onParseWidget('before', $widget));
+    }
+
+    public function testPrepareContaoTemplateSkipOnException()
+    {
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $dispatcher->method('dispatch')->willReturnCallback(function ($eventName, BeforeParseTwigTemplateEvent $event) {
+            if ('disabled' === $event->getTemplateName()) {
+                throw new SkipTemplateException('SkipTemplateException');
+            }
+
+            return $event;
+        });
+
+        $instance = $this->createTestInstance([
+            'eventDispatcher' => $dispatcher,
+        ]);
+
+        $reflection = new ReflectionClass($instance);
+        $reflectionProperty = $reflection->getProperty('templates');
+        $reflectionProperty->setAccessible(true);
+
+        $reflectionProperty->setValue($instance, ['enabled' => '', 'disabled' => '']);
+
+        $template = $this->mockTemplateObject(Template::class);
+        $template->setName('enabled');
+        $instance->prepareContaoTemplate($template);
+        $this->assertSame('twig_template_proxy', $template->getName());
+
+        $template = $this->mockTemplateObject(Template::class);
+        $template->setName('disabled');
+        $instance->prepareContaoTemplate($template);
+        $this->assertSame('disabled', $template->getName());
+    }
+
+    public function testOnParseWidgetSkipOnException()
+    {
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $dispatcher->method('dispatch')->willReturnCallback(function ($eventName, BeforeParseTwigTemplateEvent $event) {
+            if ('form_text' === $event->getTemplateName()) {
+                throw new SkipTemplateException('SkipTemplateException');
+            }
+
+            return $event;
+        });
+
+        $instance = $this->createTestInstance([
+            'eventDispatcher' => $dispatcher,
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+            ],
+        ]);
+
+        $reflection = new ReflectionClass($instance);
+        $reflectionProperty = $reflection->getProperty('templates');
+        $reflectionProperty->setAccessible(true);
+
+        $reflectionProperty->setValue($instance, ['form_row' => '', 'form_text' => '']);
+
+        $widget = $this->mockClassWithProperties(Widget::class, ['template' => 'form_row']);
+        $widget->method('inherit')->willReturn('after');
+        $this->assertSame('after', $instance->onParseWidget('before', $widget));
+
+        $widget = $this->mockClassWithProperties(Widget::class, ['template' => 'form_text']);
+        $widget->method('inherit')->willReturn('after');
+        $this->assertSame('before', $instance->onParseWidget('before', $widget));
     }
 }
