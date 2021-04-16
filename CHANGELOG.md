@@ -1,11 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2021-04-16
+- added option to skip templates
+
 ## [1.0.0] - 2021-04-14
-Same as 0.2.16 for transition.
+- Add twig renderer class ([#6])
+
+## [0.2.17] - 2021-04-16
+Same as 1.1.0
 
 ## [0.2.16] - 2021-04-14
-- Add twig renderer class ([#6])
+Same as 1.0
 
 ## [0.2.15] - 2021-04-08
 - fixed TwigFrontendTemplate not working when template loader is not activated
