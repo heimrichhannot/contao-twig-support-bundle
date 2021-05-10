@@ -306,7 +306,7 @@ class TwigTemplateLocator
             }
 
             if (!$twigKey) {
-                $twigFiles[$name]['paths'][] = Path::makeRelative($file->getRealPath(), $this->kernel->getProjectDir().'/templates');
+                $twigFiles[$name]['paths'][] = Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
             } else {
                 $twigFiles[$name]['paths'][] = "@$twigKey/".$file->getRelativePathname();
             }
