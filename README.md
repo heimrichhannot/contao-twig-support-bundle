@@ -35,11 +35,11 @@ Install via contao manager or composer:
         enable_template_loader: true
     ```
 
-1. Now you can just create a twig template like `ce_text_custom.html.twig` and add it to your projekt `template` folder (in contao 4.4: `app/Resources/views`) and you can select the template as custom Template in the text content element. You can override every core template that is parsed by `parseTemplate` and `parseWidget` hook.  You can also add templates from bundles.
+1. Now you can create every contao template as twig template. For example create a twig template `ce_text_custom.html.twig` and add it to your projekt `templates` folder (in contao 4.4: `app/Resources/views`). Now you can select the template as custom Template in the text content element (maybe you need to clear the cache before). You can override every core template that is parsed by `parseTemplate` and `parseWidget` hook. You can also add templates from bundles (just place them in `src/Resources/views`).
 
 ### Widgets
 
-As already written, this bundle also allows to override widget templates. Since twig templates are not rendered in the default widget/template scope as contao templates, you can't use `$this` to get variables. Instead twig support bundles passes the widget instance so you can use the widget object to get the variable content instand of this, for examle `{{ widget.name }}` or `{{ widget.class }}`. 
+As already written, this bundle also allows overriding widget templates. Since twig templates are not rendered in the default widget/template scope as contao templates, you can't use `$this` to get variables. Instead, twig support bundles passes the widget instance so you can use the widget object to get the variable content instand of this, for example `{{ widget.name }}` or `{{ widget.class }}`. 
 
 ### Twig and contao cavets
 
