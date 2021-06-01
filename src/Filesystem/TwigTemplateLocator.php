@@ -19,6 +19,7 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Webmozart\PathUtil\Path;
@@ -73,6 +74,20 @@ class TwigTemplateLocator
      */
     public function getTemplatePath(string $templateName, array $options = []): string
     {
+        return $this->getTemplateContext($templateName, $options)->getPath();
+    }
+
+    /**
+     * Return a twig template path by template name (without or with extension).
+     *
+     * Options:
+     * - (bool) disableCache: Set to true to disable cache. Cache is disabled by default in dev environment. Default false.
+     *
+     * @throws TemplateNotFoundException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function getTemplateContext(string $templateName, array $options = []): TemplateContext
+    {
         $templateName = basename($templateName);
         $themeFolder = '';
         $disableCache = isset($options['disableCache']) && true === $options['disableCache'];
@@ -106,18 +121,20 @@ class TwigTemplateLocator
 
             foreach ($template['paths'] as $path) {
                 if ($themeFolder === substr($path, 0, $pathLength)) {
-                    return $path;
+                    return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
                 }
             }
         }
 
         foreach ($template['paths'] as $path) {
             if ('@' !== substr($path, 0, 1)) {
-                return $path;
+                return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
             }
         }
 
-        return end($template['paths']);
+        $path = end($template['paths']);
+
+        return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
     }
 
     /**
@@ -174,19 +191,14 @@ class TwigTemplateLocator
                 if ($path && '@' === substr($path, 0, 1)) {
                     $templatePathList['bundles'][] = explode('/', $path)[0];
                 } else {
-                    $folders = explode('/', $path);
+                    foreach ($objTheme as $theme) {
+                        if (0 === strpos($path, $theme->templates)) {
+                            $templatePathList['themefolders'][] = $theme->name;
 
-                    if (\count($folders) <= 1) {
-                        $templatePathList['global'] = $path;
-                    } else {
-                        foreach ($objTheme as $theme) {
-                            $themeFolder = substr($objTheme->templates, 10);
-
-                            if ($themeFolder === substr($path, 0, \strlen($themeFolder))) {
-                                $templatePathList['themefolders'][] = $theme->name;
-                            }
+                            continue 2;
                         }
                     }
+                    $templatePathList['global'] = $path;
                 }
             }
             $optionLabel = '';
@@ -281,6 +293,8 @@ class TwigTemplateLocator
      * Return twig templates in a given path.
      *
      * @param iterable|string $dir
+     *
+     * @deprecated Use getTemplatesInPath
      */
     public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
     {
@@ -317,6 +331,62 @@ class TwigTemplateLocator
     }
 
     /**
+     * Return twig templates in a given path.
+     *
+     * Options:
+     * - name: (string) Filename if a specify file should be searched. Example: 'my_template.html.twig'
+     * - extension: (bool) Add extension to filename (array key)
+     *
+     * @param iterable|string $dir
+     */
+    public function getTemplatesInPath($dir, ?Bundle $bundle = null, array $options = []): array
+    {
+        $stopwatchname = 'TwigTemplateLocator::getTwigTemplatesInPath()';
+        $this->stopwatch->start($stopwatchname);
+
+        $name = $options['name'] ?? '*.twig';
+        $extension = $options['extension'] ?? false;
+
+        if (is_iterable($dir)) {
+            $files = $dir;
+        } elseif (\is_string($dir)) {
+            $files = (new Finder())->in($dir)->files()->followLinks()->name($name)->getIterator();
+        } else {
+            throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
+        }
+
+        if ($bundle) {
+            $twigKey = preg_replace('/Bundle$/', '', $bundle->getName());
+        }
+
+        $twigFiles = [];
+
+        foreach ($files as $file) {
+            /** @var SplFileInfo $file */
+            $name = $file->getBasename();
+
+            if (!$extension) {
+                $name = Path::getFilenameWithoutExtension($name, '.html.twig');
+            }
+
+            if (!$twigKey) {
+                $path = Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
+                $twigFiles[$name]['paths'][] = $path;
+                $twigFiles[$name]['pathInfo'][$path]['bundle'] = null;
+                $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
+            } else {
+                $path = "@$twigKey/".$file->getRelativePathname();
+                $twigFiles[$name]['paths'][] = $path;
+                $twigFiles[$name]['pathInfo'][$path]['bundle'] = $bundle->getName();
+                $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
+            }
+        }
+        $this->stopwatch->stop($stopwatchname);
+
+        return $twigFiles;
+    }
+
+    /**
      * Return all twig file paths in the typical folders.
      */
     protected function generateContaoTwigTemplatePaths(bool $extension = false): array
@@ -333,19 +403,18 @@ class TwigTemplateLocator
                 if (!is_dir($dir)) {
                     continue;
                 }
-                $twigKey = preg_replace('/Bundle$/', '', $key);
 
-                $twigFiles = array_merge_recursive($twigFiles, $this->getTwigTemplatesInPath($dir, $twigKey, $extension));
+                $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
             }
         }
 
         // Bundle template folders
-        $twigFiles = array_merge_recursive($twigFiles, $this->getTwigTemplatesInPath(
-            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(), null, $extension));
+        $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath(
+            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(), null, ['extension' => $extension]));
 
         // Project template folder
-        $twigFiles = array_merge_recursive($twigFiles, $this->getTwigTemplatesInPath(
-            $this->kernel->getProjectDir().'/templates', null, $extension));
+        $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath(
+            $this->kernel->getProjectDir().'/templates', null, ['extension' => $extension]));
 
         return $twigFiles;
     }

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2021-06-01
+- added TwigTemplateLocator::getTemplateContext()
+- introduced TwigTemplateLocator::getTemplatesInPath() and deprecated TwigTemplateLocator::getTwigTemplatesInPath()
+- fixed TwigTemplateLocator::getTemplateGroup() empty brackets in result label
+
 ## [1.1.1] - 2021-05-10
 - fixed LoaderError when template folder symlinked to symlinked bundle
 
