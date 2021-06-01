@@ -16,7 +16,7 @@ use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -123,9 +123,10 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $resourcePaths = [];
 
         foreach ($bundles as $bundle) {
-            $currentBundle = $this->createMock(Bundle::class);
+            $currentBundle = $this->createMock(BundleInterface::class);
             $bundlePath = __DIR__.'/../Fixtures/templateLocator/'.$subpath.'/'.$bundle.'/src';
             $currentBundle->method('getPath')->willReturn($bundlePath);
+            $currentBundle->method('getName')->willReturn($bundle);
             $kernelBundles[$bundle] = $currentBundle;
 
             if (is_dir($bundlePath.'/Resources/contao')) {

@@ -20,6 +20,7 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Webmozart\PathUtil\Path;
@@ -295,6 +296,7 @@ class TwigTemplateLocator
      * @param iterable|string $dir
      *
      * @deprecated Use getTemplatesInPath
+     * @codeCoverageIgnore
      */
     public function getTwigTemplatesInPath($dir, ?string $twigKey = null, bool $extension = false): array
     {
@@ -339,7 +341,7 @@ class TwigTemplateLocator
      *
      * @param iterable|string $dir
      */
-    public function getTemplatesInPath($dir, ?Bundle $bundle = null, array $options = []): array
+    public function getTemplatesInPath($dir, ?BundleInterface $bundle = null, array $options = []): array
     {
         $stopwatchname = 'TwigTemplateLocator::getTwigTemplatesInPath()';
         $this->stopwatch->start($stopwatchname);
