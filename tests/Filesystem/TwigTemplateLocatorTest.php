@@ -160,18 +160,12 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $instance = $this->createTestInstance(['framework' => $contaoFramework], $mock);
         $instance->method('getTemplates')->willReturn([
             'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
-            'hello_world' => ['paths' => ['@Acme/hello_world.html.twig']],
-            'prefix_foo_bar' => ['paths' => ['@Acme/prefix_foo_bar.html.twig', 'elements/prefix_foo_bar.html.twig']],
             'prefix_foo_bar_3' => ['paths' => ['acme/elements/prefix_foo_bar_3.html.twig']],
         ]);
-        $catchedException = false;
 
-        try {
-            $instance->getTemplateGroup('prefix');
-        } catch (\InvalidArgumentException $e) {
-            $catchedException = true;
-        }
-        $this->assertTrue($catchedException);
+        $this->assertSame([
+            'prefix_foo_bar_3' => 'prefix_foo_bar_3 (global)',
+        ], $instance->getTemplateGroup('prefix'));
     }
 
     public function testGenerateContaoTwigTemplatePathsEmpty()
