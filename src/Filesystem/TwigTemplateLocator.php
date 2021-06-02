@@ -9,6 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
+use Contao\CoreBundle\Framework\ContaoFrameworkInterface;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\PageModel;
 use Contao\ThemeModel;
@@ -19,7 +20,6 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -54,8 +54,12 @@ class TwigTemplateLocator
      * @var FilesystemAdapter
      */
     protected $templateCache;
+    /**
+     * @var ContaoFrameworkInterface
+     */
+    protected $contaoFramework;
 
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache)
+    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache, ContaoFrameworkInterface $contaoFramework)
     {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
@@ -63,6 +67,7 @@ class TwigTemplateLocator
         $this->scopeMatcher = $scopeMatcher;
         $this->stopwatch = $stopwatch;
         $this->templateCache = $templateCache;
+        $this->contaoFramework = $contaoFramework;
     }
 
     /**
@@ -171,16 +176,26 @@ class TwigTemplateLocator
             );
         }
 
+        if (empty($templateNames)) {
+            return [];
+        }
+
         try {
-            $objTheme = ThemeModel::findAll(['order' => 'name']);
+            $themes = $this->contaoFramework->getAdapter(ThemeModel::class)->findAll(['order' => 'name']);
         } catch (\Exception $e) {
-            $objTheme = null;
+            $themes = null;
         }
 
         $options = [];
 
+        $templates = $this->getTemplates(false, $disableCache);
+
+        if (!$templates) {
+            return $options;
+        }
+
         foreach ($templateNames as $templateName) {
-            if ((!$templates = $this->getTemplates(false, $disableCache)) || !\array_key_exists($templateName, $templates)) {
+            if (!\array_key_exists($templateName, $templates)) {
                 continue;
             }
 
@@ -192,11 +207,17 @@ class TwigTemplateLocator
                 if ($path && '@' === substr($path, 0, 1)) {
                     $templatePathList['bundles'][] = explode('/', $path)[0];
                 } else {
-                    foreach ($objTheme as $theme) {
-                        if (0 === strpos($path, $theme->templates)) {
-                            $templatePathList['themefolders'][] = $theme->name;
+                    if ($themes) {
+                        foreach ($themes as $theme) {
+                            if (!$theme->templates) {
+                                continue;
+                            }
 
-                            continue 2;
+                            if (0 === strpos($path, $theme->templates)) {
+                                $templatePathList['themefolders'][] = $theme->name;
+
+                                continue 2;
+                            }
                         }
                     }
                     $templatePathList['global'] = $path;
@@ -235,7 +256,7 @@ class TwigTemplateLocator
      *
      * @return array An array of matching files
      */
-    public function getPrefixedFiles(string $prefix, array $configuration = [])
+    public function getPrefixedFiles(string $prefix, array $configuration = []): array
     {
         $disableCache = isset($configuration['disableCache']) && true === $configuration['disableCache'];
         $extension = isset($configuration['extension']) && true === $configuration['extension'];
@@ -356,6 +377,8 @@ class TwigTemplateLocator
         } else {
             throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
         }
+
+        $twigKey = null;
 
         if ($bundle) {
             $twigKey = preg_replace('/Bundle$/', '', $bundle->getName());

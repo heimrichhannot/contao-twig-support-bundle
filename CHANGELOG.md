@@ -1,8 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.2.1-DEV] - 2021-06-01
+## [1.2.1] - 2021-06-01
 - fixed TwigTemplateLocator::getTemplatesInPath() method signature (changed $bundle type from Bundle to BundleInterface)
+- fixed two warnings in TwigTemplateLocator
 
 ## [1.2.0] - 2021-06-01
 - added TwigTemplateLocator::getTemplateContext()

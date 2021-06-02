@@ -12,7 +12,10 @@ use Contao\CoreBundle\Config\ResourceFinder;
 use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\TestCase\ContaoTestCase;
+use Contao\ThemeModel;
+use HeimrichHannot\TestUtilitiesBundle\Mock\ModelMockTrait;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
+use PHPUnit\Framework\MockObject\MockBuilder;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -23,7 +26,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class TwigTemplateLocatorTest extends ContaoTestCase
 {
-    public function createTestInstance(array $parameter = [])
+    use ModelMockTrait;
+
+    public function createTestInstance(array $parameter = [], ?MockBuilder $mockBuilder = null)
     {
         if (!isset($parameter['kernel'])) {
             $parameter['kernel'] = $this->createMock(KernelInterface::class);
@@ -46,14 +51,127 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             $parameter['cache'] = $this->createMock(FilesystemAdapter::class);
         }
 
+        $contaoFramework = $parameter['framework'] ?? $this->mockContaoFramework([
+            ThemeModel::class => $this->mockAdapter(['findAll']),
+        ]);
+
+        if ($mockBuilder) {
+            return $mockBuilder->setConstructorArgs([
+                $parameter['kernel'],
+                $parameter['resource_finder'],
+                $parameter['request_stack'],
+                $parameter['scope_matcher'],
+                $this->createMock(Stopwatch::class),
+                $parameter['cache'],
+                $contaoFramework,
+            ])->getMock();
+        }
+
         return new TwigTemplateLocator(
-            $parameter['kernel'],
-            $parameter['resource_finder'],
-            $parameter['request_stack'],
-            $parameter['scope_matcher'],
-            $this->createMock(Stopwatch::class),
-            $parameter['cache']
-        );
+                $parameter['kernel'],
+                $parameter['resource_finder'],
+                $parameter['request_stack'],
+                $parameter['scope_matcher'],
+                $this->createMock(Stopwatch::class),
+                $parameter['cache'],
+                $contaoFramework
+            );
+    }
+
+    public function testGetTemplateGroup()
+    {
+        $GLOBALS['TL_LANG']['MSC']['global'] = 'global';
+
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance([], $mock);
+        $instance->method('getTemplates')->willReturn([]);
+        $this->assertEmpty($instance->getTemplateGroup('prefix_'));
+
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance([], $mock);
+        $instance->method('getTemplates')->willReturn([
+            'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
+        ]);
+        $this->assertEmpty($instance->getTemplateGroup('prefix_'));
+
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance([], $mock);
+        $instance->method('getTemplates')->willReturn([
+            'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
+            'prefix_foo_bar' => ['paths' => ['@Acme/prefix_foo_bar.html.twig']],
+        ]);
+        $this->assertSame(['prefix_foo_bar' => 'prefix_foo_bar (@Acme)'], $instance->getTemplateGroup('prefix_'));
+
+        $themesModelMock = $this->mockAdapter(['findAll']);
+        $themesModelMock->method('findAll')->willReturn(null);
+        $contaoFramework = $this->mockContaoFramework([
+            ThemeModel::class => $themesModelMock,
+        ]);
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance(['framework' => $contaoFramework], $mock);
+        $instance->method('getTemplates')->willReturn([
+            'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
+            'prefix_foo_bar' => ['paths' => ['@Acme/prefix_foo_bar.html.twig', 'elements/prefix_foo_bar.html.twig']],
+            'prefix_foo_bar_3' => ['paths' => ['acme/elements/prefix_foo_bar_3.html.twig']],
+        ]);
+        $this->assertSame([
+            'prefix_foo_bar' => 'prefix_foo_bar (global, @Acme)',
+            'prefix_foo_bar_3' => 'prefix_foo_bar_3 (global)',
+        ], $instance->getTemplateGroup('prefix_'));
+
+        $themesModelMock = $this->mockAdapter(['findAll']);
+        $themesModelMock->method('findAll')->willReturn([
+            $this->mockModelObject(ThemeModel::class, ['templates' => 'acme', 'name' => 'Default']),
+            $this->mockModelObject(ThemeModel::class, ['templates' => 'foo_bar', 'name' => 'Foo Bar']),
+            $this->mockModelObject(ThemeModel::class, ['templates' => '', 'name' => 'Foo Bar']),
+        ]);
+        $contaoFramework = $this->mockContaoFramework([
+            ThemeModel::class => $themesModelMock,
+        ]);
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance(['framework' => $contaoFramework], $mock);
+        $instance->method('getTemplates')->willReturn([
+            'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
+            'hello_world' => ['paths' => ['@Acme/hello_world.html.twig']],
+            'prefix_foo_bar' => ['paths' => ['@Acme/prefix_foo_bar.html.twig', 'elements/prefix_foo_bar.html.twig']],
+            'prefix_foo_bar_3' => ['paths' => ['acme/elements/prefix_foo_bar_3.html.twig']],
+        ]);
+        $this->assertSame([
+            'prefix_foo_bar' => 'prefix_foo_bar (global, @Acme)',
+            'prefix_foo_bar_3' => 'prefix_foo_bar_3 (Default)',
+            'hello_world' => 'hello_world (@Acme)',
+        ], $instance->getTemplateGroup(['prefix_', 'hello']));
+
+        $catchedException = false;
+
+        try {
+            $instance->getTemplateGroup(4);
+        } catch (\InvalidArgumentException $e) {
+            $catchedException = true;
+        }
+        $this->assertTrue($catchedException);
+
+        $themesModelMock = $this->mockAdapter(['findAll']);
+        $themesModelMock->method('findAll')->willThrowException(new \Exception('Some Exception'));
+        $contaoFramework = $this->mockContaoFramework([
+            ThemeModel::class => $themesModelMock,
+        ]);
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->setMethods(['getTemplates']);
+        $instance = $this->createTestInstance(['framework' => $contaoFramework], $mock);
+        $instance->method('getTemplates')->willReturn([
+            'foo_bar' => ['paths' => ['@Acme/foo_bar.html.twig']],
+            'hello_world' => ['paths' => ['@Acme/hello_world.html.twig']],
+            'prefix_foo_bar' => ['paths' => ['@Acme/prefix_foo_bar.html.twig', 'elements/prefix_foo_bar.html.twig']],
+            'prefix_foo_bar_3' => ['paths' => ['acme/elements/prefix_foo_bar_3.html.twig']],
+        ]);
+        $catchedException = false;
+
+        try {
+            $instance->getTemplateGroup('prefix');
+        } catch (\InvalidArgumentException $e) {
+            $catchedException = true;
+        }
+        $this->assertTrue($catchedException);
     }
 
     public function testGenerateContaoTwigTemplatePathsEmpty()
