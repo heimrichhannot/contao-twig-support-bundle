@@ -14,6 +14,7 @@
   },
   "require-dev": {
     "contao/test-case": "1.1.*",
+    "contao/core-bundle": ">=4.4.0,<4.11",
     "contao/manager-plugin": "^2.0",
     "friendsofphp/php-cs-fixer": "^2.2",
     "phpunit/phpunit": "^6.5",
