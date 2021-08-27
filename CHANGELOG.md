@@ -3,8 +3,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2021-07-14
-- fixed wrong license file
+## [Unreleased]
+
+## [1.3.0] - 2021-08-27
+- Added: support for new bundle structure convention (see [Symfony Best Practices](https://symfony.com/doc/4.4/bundles/best_practices.html#directory-structure))
+- Fixed: wrong license file
 
 ## [1.2.1] - 2021-06-02
 - fixed TwigTemplateLocator::getTemplatesInPath() method signature (changed $bundle type from Bundle to BundleInterface)

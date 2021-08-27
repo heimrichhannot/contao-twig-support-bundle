@@ -423,10 +423,10 @@ class TwigTemplateLocator
             foreach ($bundles as $key => $bundle) {
                 $path = $bundle->getPath();
 
-                $dir = rtrim($path, '/').'/Resources/views';
-
-                if (!is_dir($dir)) {
-                    continue;
+                if (!is_dir($dir = rtrim($path, '/').'/Resources/views')) {
+                    if (!is_dir($dir = rtrim($path, '/').'/templates')) {
+                        continue;
+                    }
                 }
 
                 $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
