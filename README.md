@@ -39,7 +39,7 @@ Install via contao manager or composer:
 
 ### Widgets
 
-As already written, this bundle also allows overriding widget templates. Since twig templates are not rendered in the default widget/template scope as contao templates, you can't use `$this` to get variables. Instead, twig support bundles passes the widget instance so you can use the widget object to get the variable content instand of this, for example `{{ widget.name }}` or `{{ widget.class }}`. 
+As already written, this bundle also allows overriding widget templates. Since twig templates are not rendered in the default widget/template scope as contao templates, you can't use `$this` to get variables. Instead, twig support bundle passes the widget instance, so you can use the widget object to get the variable content, for example `{{ widget.name }}` or `{{ widget.class }}`. 
 
 ### Twig and contao cavets
 
