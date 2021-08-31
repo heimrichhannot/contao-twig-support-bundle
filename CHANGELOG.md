@@ -1,9 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
-
+1
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.4.0] - 2021-08-31
+
+- Added: support for php 8
 
 ## [1.3.0] - 2021-08-27
 - Added: support for new bundle structure convention (see [Symfony Best Practices](https://symfony.com/doc/4.4/bundles/best_practices.html#directory-structure))
