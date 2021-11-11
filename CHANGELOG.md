@@ -1,9 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
-1
+
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.4.1] - 2021-11-11
+
+- Fixed: issue concerning twig template file extensions
 
 ## [1.4.0] - 2021-08-31
 
