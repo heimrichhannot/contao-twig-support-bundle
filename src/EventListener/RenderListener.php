@@ -139,7 +139,7 @@ class RenderListener
     {
         $templateName = $widget->template;
 
-        if (!$this->enableTemplateLoader || !isset($this->templates[$templateName]) || $this->isSkippedTemplate($templateName)) {
+        if (!$this->enableTemplateLoader || !isset($this->getTemplates()[$templateName]) || $this->isSkippedTemplate($templateName)) {
             return $buffer;
         }
 
@@ -218,7 +218,7 @@ class RenderListener
     {
         $templateName = $contaoTemplate->getName();
 
-        if (!isset($this->templates[$templateName])) {
+        if (!isset($this->getTemplates()[$templateName])) {
             throw new TemplateNotFoundException("Twig template '".$templateName."' could not be found.");
         }
 
@@ -252,5 +252,13 @@ class RenderListener
         }
 
         return \in_array($template, $this->bundleConfig['skip_templates']);
+    }
+
+    private function getTemplates(): array
+    {
+        if (!$this->templates) {
+            $this->templates = $this->templateLocator->getTemplates(false);
+        }
+        return $this->templates;
     }
 }

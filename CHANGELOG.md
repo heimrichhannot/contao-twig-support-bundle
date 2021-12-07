@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.4.2] - 2021-12-07
+- Fixed: template list empty if initializeSystem hook not executed in RenderListener
+
 ## [1.4.1] - 2021-11-11
 
 - Fixed: issue concerning twig template file extensions
