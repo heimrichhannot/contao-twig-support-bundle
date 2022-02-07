@@ -10,7 +10,6 @@
     "symfony/cache": "4.4||^5.4",
     "symfony/config": "4.4||^5.4",
     "symfony/event-dispatcher": "4.4||^5.4",
-    "symfony/event-dispatcher-contracts": "4.4||^5.4",
     "symfony/finder": "^4.4||^5.4",
     "symfony/http-foundation": "4.4||^5.4",
     "symfony/http-kernel": "4.4||^5.4",
