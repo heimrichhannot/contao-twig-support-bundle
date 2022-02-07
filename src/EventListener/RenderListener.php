@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2022 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -155,10 +155,7 @@ class RenderListener
         }
 
         try {
-            /** @noinspection PhpMethodParametersCountMismatchInspection */
-            /** @noinspection PhpParamsInspection */
             $event = $this->eventDispatcher->dispatch(
-                BeforeParseTwigTemplateEvent::NAME,
                 new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget)
             );
         } catch (SkipTemplateException $e) {
@@ -194,11 +191,7 @@ class RenderListener
             $twigTemplateData['widget'] = $contaoTemplate;
         }
 
-        /** @var BeforeRenderTwigTemplateEvent $event */
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        /** @noinspection PhpParamsInspection */
         $event = $this->eventDispatcher->dispatch(
-            BeforeRenderTwigTemplateEvent::NAME,
             new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate)
         );
 
@@ -225,10 +218,7 @@ class RenderListener
         $templateData = $contaoTemplate->getData();
 
         try {
-            /** @noinspection PhpMethodParametersCountMismatchInspection */
-            /** @noinspection PhpParamsInspection */
             $event = $this->eventDispatcher->dispatch(
-                BeforeParseTwigTemplateEvent::NAME,
                 new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
             );
         } catch (SkipTemplateException $e) {
@@ -259,6 +249,7 @@ class RenderListener
         if (!$this->templates) {
             $this->templates = $this->templateLocator->getTemplates(false);
         }
+
         return $this->templates;
     }
 }
