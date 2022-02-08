@@ -156,7 +156,8 @@ class RenderListener
 
         try {
             $event = $this->eventDispatcher->dispatch(
-                new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget)
+                new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget),
+                BeforeRenderTwigTemplateEvent::NAME
             );
         } catch (SkipTemplateException $e) {
             return $buffer;
@@ -192,7 +193,8 @@ class RenderListener
         }
 
         $event = $this->eventDispatcher->dispatch(
-            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate)
+            new BeforeRenderTwigTemplateEvent($twigTemplateName, $twigTemplateData, $twigTemplatePath, $contaoTemplate),
+            BeforeRenderTwigTemplateEvent::NAME
         );
 
         if ($contaoTemplate instanceof Template) {
@@ -219,7 +221,8 @@ class RenderListener
 
         try {
             $event = $this->eventDispatcher->dispatch(
-                new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate)
+                new BeforeParseTwigTemplateEvent($templateName, $templateData, $contaoTemplate),
+                BeforeParseTwigTemplateEvent::NAME
             );
         } catch (SkipTemplateException $e) {
             return;

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.6] - 2022-02-08
+
+- Fixed: event dispatcher calls
+
 ## [1.5.5] - 2022-02-07
 
 - Fixed: symfony deps
