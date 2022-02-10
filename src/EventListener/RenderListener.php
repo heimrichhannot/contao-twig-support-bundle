@@ -157,7 +157,7 @@ class RenderListener
         try {
             $event = $this->eventDispatcher->dispatch(
                 new BeforeParseTwigTemplateEvent($templateName, $templateData, $widget),
-                BeforeRenderTwigTemplateEvent::NAME
+                BeforeParseTwigTemplateEvent::NAME
             );
         } catch (SkipTemplateException $e) {
             return $buffer;
