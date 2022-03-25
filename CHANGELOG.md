@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.8] - 2022-03-25
+- Fixed: exception if the templates folder does not exist ([#8], [@qzminski])
+
 ## [1.5.7] - 2022-02-10
 
 - Fixed: typo in event dispatcher calls
@@ -195,4 +198,6 @@ Same as 1.0
 
 Initial release
 
+[#8]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/8
 [#6]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/6
+[@qzminski]: https://github.com/qzminski
