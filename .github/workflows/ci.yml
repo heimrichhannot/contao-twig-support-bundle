@@ -9,17 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [ 7.2, 7.3, 7.4, 8.0, 8.1 ]
+        php: [ 7.2, 7.3, 7.4 ]
         contao: [ 4.9.*, 4.13.* ]
-        incompatible: [false]
-        # Incompatible due outdated contao test case
-        include:
-          - php: 8.0
-            incompatible: true
-          - php: 8.1
-            incompatible: true
-          - contao: 4.13.*
-            incompatible: true
         exclude:
           - php: 7.2
             contao: 4.13.*
@@ -40,7 +31,6 @@ jobs:
       - name: Install the dependencies
         id: composer-install
         run: composer require contao/core-bundle:${{ matrix.contao }} --no-interaction
-        continue-on-error: ${{ incompatible == true }}
 
       - name: Run the unit tests
         if: steps.composer-install.conclusion == 'success' && steps.composer-install.outcome == 'success'
