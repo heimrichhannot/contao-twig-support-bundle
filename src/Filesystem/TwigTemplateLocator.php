@@ -17,6 +17,7 @@ use Contao\Validator;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -373,7 +374,11 @@ class TwigTemplateLocator
         if (is_iterable($dir)) {
             $files = $dir;
         } elseif (\is_string($dir)) {
-            $files = (new Finder())->in($dir)->files()->followLinks()->name($name)->getIterator();
+            try {
+                $files = (new Finder())->in($dir)->files()->followLinks()->name($name)->getIterator();
+            } catch (DirectoryNotFoundException $e) {
+                $files = [];
+            }
         } else {
             throw new \InvalidArgumentException('Template paths entry must be a folder (string) or an iterable');
         }
