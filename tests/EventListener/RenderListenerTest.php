@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2022 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -41,7 +41,7 @@ class RenderListenerTest extends ContaoTestCase
 
         if (!isset($parameters['eventDispatcher'])) {
             $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-            $eventDispatcher->method('dispatch')->willReturnArgument(1);
+            $eventDispatcher->method('dispatch')->willReturnArgument(0);
             $parameters['eventDispatcher'] = $eventDispatcher;
         }
 
@@ -185,7 +185,7 @@ class RenderListenerTest extends ContaoTestCase
     public function testPrepareContaoTemplateSkipOnException()
     {
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->method('dispatch')->willReturnCallback(function ($eventName, BeforeParseTwigTemplateEvent $event) {
+        $dispatcher->method('dispatch')->willReturnCallback(function (BeforeParseTwigTemplateEvent $event, $eventName = '') {
             if ('disabled' === $event->getTemplateName()) {
                 throw new SkipTemplateException('SkipTemplateException');
             }
@@ -217,7 +217,7 @@ class RenderListenerTest extends ContaoTestCase
     public function testOnParseWidgetSkipOnException()
     {
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->method('dispatch')->willReturnCallback(function ($eventName, BeforeParseTwigTemplateEvent $event) {
+        $dispatcher->method('dispatch')->willReturnCallback(function (BeforeParseTwigTemplateEvent $event, $eventName = '') {
             if ('form_text' === $event->getTemplateName()) {
                 throw new SkipTemplateException('SkipTemplateException');
             }
