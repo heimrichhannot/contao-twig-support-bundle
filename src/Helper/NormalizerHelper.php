@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2020 Heimrich & Hannot GmbH
+ * Copyright (c) 2022 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -101,7 +101,7 @@ class NormalizerHelper
                 $method->setAccessible(true);
                 $data[$property] = $method->invoke($object);
             } else {
-                $data[$property] = $object->{$method->name}();
+                $data[$property] = @$object->{$method->name}();
             }
 
             if (\is_object($data[$property])) {

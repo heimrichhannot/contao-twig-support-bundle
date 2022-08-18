@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.9] - 2022-06-02
+- Fixed: warning in php 8
+
 ## [1.5.8] - 2022-03-25
 - Fixed: exception if the templates folder does not exist ([#8], [@qzminski])
 
