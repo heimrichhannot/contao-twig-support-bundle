@@ -13,6 +13,9 @@ namespace HeimrichHannot\TwigSupportBundle\Twig\Interop;
 use Contao\Template;
 
 /**
+ * This class is copy of Contao\CoreBundle\Twig\Interop\ContextFactory to make is usable in contao 4.9.
+ * All credits are going to the contao core team!
+ *
  * @experimental
  */
 final class ContextFactory

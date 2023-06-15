@@ -12,13 +12,12 @@ use Contao\Config;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
-use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class TwigTemplateRenderer implements ServiceSubscriberInterface
+class TwigTemplateRenderer
 {
     protected $twig;
     protected $templateLocator;
@@ -78,12 +77,6 @@ class TwigTemplateRenderer implements ServiceSubscriberInterface
         $buffer = $this->addTemplateComments($configuration, $templatePath, $buffer);
 
         return $buffer;
-    }
-
-    public static function getSubscribedServices()
-    {
-        return [
-        ];
     }
 
     protected function addTemplateComments(?TwigTemplateRendererConfiguration $configuration, string $templatePath, string $buffer): string
