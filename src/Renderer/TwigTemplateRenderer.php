@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2023 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -12,12 +12,13 @@ use Contao\Config;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class TwigTemplateRenderer
+class TwigTemplateRenderer implements ServiceSubscriberInterface
 {
     protected $twig;
     protected $templateLocator;
@@ -69,12 +70,20 @@ class TwigTemplateRenderer
                     throw $e;
                 }
                 $buffer = '';
+            } catch (\Error $e) {
+                throw new \Error(sprintf('Error rendering template "%s": %s', $templatePath, $e->getMessage()), $e->getCode(), $e);
             }
         }
 
         $buffer = $this->addTemplateComments($configuration, $templatePath, $buffer);
 
         return $buffer;
+    }
+
+    public static function getSubscribedServices()
+    {
+        return [
+        ];
     }
 
     protected function addTemplateComments(?TwigTemplateRendererConfiguration $configuration, string $templatePath, string $buffer): string
