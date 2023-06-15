@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2022-06-15
+- Added: support for callables in contao templates ([#10])
+- Changed: enhance error messages when rendering templates ([#10])
+- Changed: raised minimum supported php version to 7.4 ([#10])
+
 ## [1.5.9] - 2022-06-02
 - Fixed: warning with php 8 ([#9])
 
@@ -201,6 +206,7 @@ Same as 1.0
 
 Initial release
 
+[#10]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/10
 [#9]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/9
 [#8]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/8
 [#6]: https://github.com/heimrichhannot/contao-twig-support-bundle/pull/6
