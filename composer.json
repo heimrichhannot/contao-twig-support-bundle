@@ -23,7 +23,7 @@
     "contao/test-case": "^4.9",
     "contao/manager-plugin": "^2.0",
     "friendsofphp/php-cs-fixer": "^2.2",
-    "phpunit/phpunit": "^8.0",
+    "phpunit/phpunit": "^8.0 || ^9.0",
     "php-coveralls/php-coveralls": "^2.0",
     "symfony/phpunit-bridge": "^4.4 || ^5.4",
     "heimrichhannot/contao-test-utilities-bundle": "^0.1.5"
@@ -44,7 +44,8 @@
   "config": {
     "allow-plugins": {
       "contao-components/installer": true,
-      "contao/manager-plugin": true
+      "contao/manager-plugin": true,
+      "php-http/discovery": false
     }
   }
 }
