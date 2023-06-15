@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2022 Heimrich & Hannot GmbH
+ * Copyright (c) 2023 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -9,6 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\EventListener;
 
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Contao\CoreBundle\Twig\Interop\ContextFactory as ContaoContextFactory;
 use Contao\Template;
 use Contao\TemplateLoader;
 use Contao\Widget;
@@ -20,11 +21,14 @@ use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
 use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
 use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRendererConfiguration;
+use HeimrichHannot\TwigSupportBundle\Twig\Interop\ContextFactory;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
-class RenderListener
+class RenderListener implements ServiceSubscriberInterface
 {
     const TWIG_TEMPLATE = 'twig_template';
     const TWIG_CONTEXT = 'twig_context';
@@ -67,15 +71,14 @@ class RenderListener
      * @var bool
      */
     protected $enableTemplateLoader = false;
-    /**
-     * @var TwigTemplateRenderer
-     */
-    protected $twigTemplateRenderer;
+
+    protected TwigTemplateRenderer $twigTemplateRenderer;
+    private ContainerInterface $container;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
+    public function __construct(ContainerInterface $container, TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
     {
         $this->templateLocator = $templateLocator;
         $this->eventDispatcher = $eventDispatcher;
@@ -88,6 +91,7 @@ class RenderListener
         if (isset($bundleConfig['enable_template_loader']) && true === $bundleConfig['enable_template_loader']) {
             $this->enableTemplateLoader = true;
         }
+        $this->container = $container;
     }
 
     /**
@@ -228,11 +232,27 @@ class RenderListener
             return;
         }
 
+        if (class_exists(ContaoContextFactory::class) && $this->container->has(ContaoContextFactory::class)) {
+            $contextFactory = $this->container->get(ContaoContextFactory::class);
+        } else {
+            $contextFactory = new ContextFactory();
+        }
+
+        $contaoTemplate->setData($event->getTemplateData());
+        $templateData = $contextFactory->fromContaoTemplate($contaoTemplate);
+
         $contaoTemplate->setName('twig_template_proxy');
         $contaoTemplate->setData([
             static::TWIG_TEMPLATE => $event->getTemplateName(),
-            static::TWIG_CONTEXT => $event->getTemplateData(),
+            static::TWIG_CONTEXT => $templateData,
         ]);
+    }
+
+    public static function getSubscribedServices(): array
+    {
+        return [
+            '?Contao\CoreBundle\Twig\Interop\ContextFactory',
+        ];
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2022 Heimrich & Hannot GmbH
+ * Copyright (c) 2023 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -23,6 +23,7 @@ use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
 use PHPUnit\Framework\MockObject\MockBuilder;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
@@ -33,6 +34,8 @@ class RenderListenerTest extends ContaoTestCase
 
     public function createTestInstance(array $parameters = [], ?MockBuilder $mockBuilder = null)
     {
+        $container = $parameters['container'] ?? new ContainerBuilder();
+
         if (!isset($parameters['templateLocator'])) {
             $templateLocator = $this->createMock(TwigTemplateLocator::class);
             $templateLocator->method('getTemplatePath')->willReturnArgument(0);
@@ -71,6 +74,7 @@ class RenderListenerTest extends ContaoTestCase
 
         if ($mockBuilder) {
             $instance = $mockBuilder->setConstructorArgs([
+                $container,
                 $parameters['templateLocator'],
                 $parameters['eventDispatcher'],
                 $parameters['requestStack'],
@@ -81,6 +85,7 @@ class RenderListenerTest extends ContaoTestCase
             ])->getMock();
         } else {
             $instance = new RenderListener(
+                $container,
                 $parameters['templateLocator'],
                 $parameters['eventDispatcher'],
                 $parameters['requestStack'],
