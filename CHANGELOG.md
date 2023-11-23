@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 20223-11-23
+- Fixed: templates in project /contao/templates folder not found
+
 ## [1.6.0] - 2022-06-15
 - Added: support for callables in contao templates ([#10])
 - Changed: enhance error messages when rendering templates ([#10])

@@ -9,7 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
-use Contao\CoreBundle\Framework\ContaoFrameworkInterface;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\PageModel;
 use Contao\ThemeModel;
@@ -21,6 +21,7 @@ use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -28,39 +29,17 @@ use Webmozart\PathUtil\Path;
 
 class TwigTemplateLocator
 {
-    /**
-     * @var KernelInterface
-     */
-    protected $kernel;
-    /**
-     * @var ResourceFinderInterface
-     */
-    protected $contaoResourceFinder;
+    protected KernelInterface         $kernel;
+    protected ResourceFinderInterface $contaoResourceFinder;
+    protected RequestStack            $requestStack;
+    protected ScopeMatcher            $scopeMatcher;
+    protected ?array                  $templates;
+    protected ?array                  $templateWithExtension;
+    protected Stopwatch               $stopwatch;
+    protected FilesystemAdapter       $templateCache;
+    private ContaoFramework           $contaoFramework;
 
-    protected $requestStack;
-
-    protected $scopeMatcher;
-
-    /**
-     * @var array|null
-     */
-    protected $templates;
-    /** @var array|null */
-    protected $templateWithExtension;
-    /**
-     * @var Stopwatch
-     */
-    protected $stopwatch;
-    /**
-     * @var FilesystemAdapter
-     */
-    protected $templateCache;
-    /**
-     * @var ContaoFrameworkInterface
-     */
-    protected $contaoFramework;
-
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache, ContaoFrameworkInterface $contaoFramework)
+    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache, ContaoFramework $contaoFramework)
     {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
@@ -401,6 +380,12 @@ class TwigTemplateLocator
 
             if (!$twigKey) {
                 $path = Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
+                $twigFiles[$name]['paths'][]                     = $path;
+                $twigFiles[$name]['pathInfo'][$path]['bundle']   = null;
+                $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
+            }
+            elseif ('Contao' === $twigKey) {
+                $path = "@$twigKey/".$file->getBasename();
                 $twigFiles[$name]['paths'][] = $path;
                 $twigFiles[$name]['pathInfo'][$path]['bundle'] = null;
                 $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
@@ -428,23 +413,40 @@ class TwigTemplateLocator
             foreach ($bundles as $key => $bundle) {
                 $path = $bundle->getPath();
 
-                if (!is_dir($dir = rtrim($path, '/').'/Resources/views')) {
-                    if (!is_dir($dir = rtrim($path, '/').'/templates')) {
+                foreach (['/templates', '/Resources/views',] as $subpath) {
+                    if (!is_dir($dir = rtrim($path, '/').$subpath)) {
                         continue;
                     }
-                }
 
-                $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
+                    $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
+                }
             }
+        }
+
+        $bundle = null;
+        if (version_compare(\VERSION, '4.12', '>=')) {
+            $bundle = new class extends Bundle {
+                public function __construct()
+                {
+                    $this->name = 'Contao';
+                }
+            };
         }
 
         // Bundle template folders
         $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath(
-            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(), null, ['extension' => $extension]));
+            $this->contaoResourceFinder->findIn('templates')->name('*.twig')->getIterator(),
+            $bundle,
+            ['extension' => $extension]));
 
         // Project template folder
-        $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath(
-            $this->kernel->getProjectDir().'/templates', null, ['extension' => $extension]));
+        foreach (['/contao/templates', '/templates',] as $subpath) {
+            if (!is_dir($dir = $this->kernel->getProjectDir().$subpath)) {
+                continue;
+            }
+
+            $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
+        }
 
         return $twigFiles;
     }
