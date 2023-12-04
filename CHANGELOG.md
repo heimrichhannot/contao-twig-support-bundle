@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 20223-12-04
+- Fixed: possible exception on cache warmup
+
 ## [1.6.1] - 20223-11-23
 - Fixed: templates in project /contao/templates folder not found
 
