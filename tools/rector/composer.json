@@ -1,0 +1,6 @@
+{
+    "require": {
+        "rector/rector": "^1.0",
+        "contao/contao-rector": "dev-main"
+    }
+}

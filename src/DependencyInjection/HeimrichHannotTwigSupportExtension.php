@@ -19,9 +19,9 @@ class HeimrichHannotTwigSupportExtension extends Extension
     {
         $loader = new YamlFileLoader(
             $container,
-            new FileLocator(__DIR__.'/../Resources/config')
+            new FileLocator(__DIR__.'/../../config')
         );
-        $loader->load('services.yml');
+        $loader->load('services.yaml');
 
         $configuration = new Configuration();
         $bundleConfig = $this->processConfiguration($configuration, $configs);

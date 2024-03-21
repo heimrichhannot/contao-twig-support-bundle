@@ -17,4 +17,9 @@ class HeimrichHannotTwigSupportBundle extends Bundle
     {
         return new HeimrichHannotTwigSupportExtension();
     }
+
+    public function getPath()
+    {
+        return \dirname(__DIR__);
+    }
 }

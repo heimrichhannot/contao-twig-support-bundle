@@ -17,14 +17,7 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('huh_twig_support');
 
-        // Keep compatibility with symfony/config < 4.2
-        if (!method_exists($treeBuilder, 'getRootNode')) {
-            $rootNode = $treeBuilder->root('huh_twig_support');
-        } else {
-            $rootNode = $treeBuilder->getRootNode();
-        }
-
-        $rootNode
+        $treeBuilder->getRootNode()
             ->children()
                 ->booleanNode('enable_template_loader')
                     ->defaultFalse()
