@@ -10,6 +10,7 @@ namespace HeimrichHannot\TwigSupportBundle\Test\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinder;
 use Contao\CoreBundle\Config\ResourceFinderInterface;
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\TestCase\ContaoTestCase;
 use Contao\ThemeModel;
@@ -26,7 +27,19 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class TwigTemplateLocatorTest extends ContaoTestCase
 {
+
     use ModelMockTrait;
+
+    protected function setUp(): void
+    {
+        if (!defined('VERSION')) {
+            if (method_exists(ContaoCoreBundle::class, 'getVersion')) {
+                define('VERSION', ContaoCoreBundle::getVersion());
+            } else {
+                define('VERSION', '4.9');
+            }
+        }
+    }
 
     public function createTestInstance(array $parameter = [], ?MockBuilder $mockBuilder = null)
     {

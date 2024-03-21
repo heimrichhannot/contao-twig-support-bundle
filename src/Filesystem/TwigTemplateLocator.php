@@ -9,6 +9,7 @@
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\PageModel;
