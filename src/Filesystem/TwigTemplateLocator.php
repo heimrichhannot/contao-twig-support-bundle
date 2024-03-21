@@ -439,14 +439,15 @@ class TwigTemplateLocator
             $bundle,
             ['extension' => $extension]));
 
-        // Project template folder
-        foreach (['/contao/templates', '/templates',] as $subpath) {
-            if (!is_dir($dir = $this->kernel->getProjectDir().$subpath)) {
-                continue;
-            }
-
-            $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath($dir, $bundle, ['extension' => $extension]));
-        }
+        // Project template folders
+        $twigFiles = array_merge_recursive(
+            $twigFiles,
+            $this->getTemplatesInPath($this->kernel->getProjectDir().'/contao/templates', $bundle, ['extension' => $extension])
+        );
+        $twigFiles = array_merge_recursive(
+            $twigFiles,
+            $this->getTemplatesInPath($this->kernel->getProjectDir().'/templates', null, ['extension' => $extension])
+        );
 
         return $twigFiles;
     }
