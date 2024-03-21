@@ -39,7 +39,7 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
         return true;
     }
 
-    public function warmUp($cacheDir)
+    public function warmUp($cacheDir): void
     {
         $this->contaoFramework->initialize();
 
@@ -55,7 +55,7 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
         );
     }
 
-    public function clear($cacheDir)
+    public function clear($cacheDir): void
     {
         $this->templateCache
             ->deleteItems([

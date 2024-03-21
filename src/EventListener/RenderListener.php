@@ -30,8 +30,8 @@ use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
 class RenderListener implements ServiceSubscriberInterface
 {
-    const TWIG_TEMPLATE = 'twig_template';
-    const TWIG_CONTEXT = 'twig_context';
+    public const TWIG_TEMPLATE = 'twig_template';
+    public const TWIG_CONTEXT = 'twig_context';
 
     /** @var string[] */
     protected $templates = [];

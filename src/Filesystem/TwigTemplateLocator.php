@@ -33,8 +33,8 @@ class TwigTemplateLocator
     protected ResourceFinderInterface $contaoResourceFinder;
     protected RequestStack            $requestStack;
     protected ScopeMatcher            $scopeMatcher;
-    protected ?array                  $templates;
-    protected ?array                  $templateWithExtension;
+    protected ?array                  $templates = null;
+    protected ?array                  $templateWithExtension = null;
     protected Stopwatch               $stopwatch;
     protected FilesystemAdapter       $templateCache;
     private ContaoFramework           $contaoFramework;
@@ -193,7 +193,7 @@ class TwigTemplateLocator
                                 continue;
                             }
 
-                            if (0 === strpos($path, $theme->templates)) {
+                            if (0 === strpos($path, (string) $theme->templates)) {
                                 $templatePathList['themefolders'][] = $theme->name;
 
                                 continue 2;

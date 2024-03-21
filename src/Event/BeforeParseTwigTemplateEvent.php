@@ -14,7 +14,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class BeforeParseTwigTemplateEvent extends Event
 {
-    const NAME = 'huh.twig_support.before_parse_twig_template';
+    public const NAME = 'huh.twig_support.before_parse_twig_template';
     /**
      * @var string
      */
