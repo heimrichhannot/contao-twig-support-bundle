@@ -74,7 +74,6 @@ class RenderListenerTest extends ContaoTestCase
 
         if ($mockBuilder) {
             $instance = $mockBuilder->setConstructorArgs([
-                $container,
                 $parameters['templateLocator'],
                 $parameters['eventDispatcher'],
                 $parameters['requestStack'],
@@ -85,7 +84,6 @@ class RenderListenerTest extends ContaoTestCase
             ])->getMock();
         } else {
             $instance = new RenderListener(
-                $container,
                 $parameters['templateLocator'],
                 $parameters['eventDispatcher'],
                 $parameters['requestStack'],
@@ -95,6 +93,8 @@ class RenderListenerTest extends ContaoTestCase
                 $templateRenderer
             );
         }
+
+        $instance->setContainer($container);
 
         return $instance;
     }
