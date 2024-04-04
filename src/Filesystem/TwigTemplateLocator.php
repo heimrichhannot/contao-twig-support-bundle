@@ -435,14 +435,6 @@ class TwigTemplateLocator
         }
 
         $bundle = null;
-        if (version_compare(\VERSION, '4.12', '>=')) {
-            $bundle = new class extends Bundle {
-                public function __construct()
-                {
-                    $this->name = 'Contao';
-                }
-            };
-        }
 
         // Bundle template folders
         $twigFiles = array_merge_recursive($twigFiles, $this->getTemplatesInPath(
