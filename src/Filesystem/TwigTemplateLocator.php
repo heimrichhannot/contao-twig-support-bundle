@@ -9,7 +9,6 @@
 namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 
 use Contao\CoreBundle\Config\ResourceFinderInterface;
-use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\PageModel;
@@ -18,7 +17,7 @@ use Contao\Validator;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -40,7 +39,7 @@ class TwigTemplateLocator
     protected Stopwatch               $stopwatch;
     protected FilesystemAdapter       $templateCache;
     protected ContaoFramework         $contaoFramework;
-    protected ParameterBag            $parameterBag;
+    protected ParameterBagInterface   $parameterBag;
 
     public function __construct(
         KernelInterface         $kernel,
@@ -50,7 +49,7 @@ class TwigTemplateLocator
         Stopwatch               $stopwatch,
         FilesystemAdapter       $templateCache,
         ContaoFramework         $contaoFramework,
-        ParameterBag            $parameterBag
+        ParameterBagInterface   $parameterBag
     ) {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
