@@ -22,14 +22,16 @@ use HeimrichHannot\TwigSupportBundle\Helper\NormalizerHelper;
 use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRenderer;
 use HeimrichHannot\TwigSupportBundle\Renderer\TwigTemplateRendererConfiguration;
 use HeimrichHannot\TwigSupportBundle\Twig\Interop\ContextFactory;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
+use Symfony\Contracts\Service\ServiceSubscriberTrait;
 
 class RenderListener implements ServiceSubscriberInterface
 {
+    use ServiceSubscriberTrait;
+
     public const TWIG_TEMPLATE = 'twig_template';
     public const TWIG_CONTEXT = 'twig_context';
 
@@ -73,13 +75,19 @@ class RenderListener implements ServiceSubscriberInterface
     protected $enableTemplateLoader = false;
 
     protected TwigTemplateRenderer $twigTemplateRenderer;
-    private ContainerInterface $container;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(ContainerInterface $container, TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
-    {
+    public function __construct(
+        TwigTemplateLocator      $templateLocator,
+        EventDispatcherInterface $eventDispatcher,
+        RequestStack             $requestStack,
+        ScopeMatcher             $scopeMatcher,
+        NormalizerHelper         $normalizer,
+        array                    $bundleConfig,
+        TwigTemplateRenderer     $twigTemplateRenderer
+    ) {
         $this->templateLocator = $templateLocator;
         $this->eventDispatcher = $eventDispatcher;
         $this->requestStack = $requestStack;
@@ -91,7 +99,6 @@ class RenderListener implements ServiceSubscriberInterface
         if (isset($bundleConfig['enable_template_loader']) && true === $bundleConfig['enable_template_loader']) {
             $this->enableTemplateLoader = true;
         }
-        $this->container = $container;
     }
 
     /**
@@ -251,7 +258,7 @@ class RenderListener implements ServiceSubscriberInterface
     public static function getSubscribedServices(): array
     {
         return [
-            '?Contao\CoreBundle\Twig\Interop\ContextFactory',
+            '?'.ContaoContextFactory::class,
         ];
     }
 

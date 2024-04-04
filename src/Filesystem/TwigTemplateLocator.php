@@ -18,6 +18,7 @@ use Contao\Validator;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -38,10 +39,19 @@ class TwigTemplateLocator
     protected ?array                  $templateWithExtension = null;
     protected Stopwatch               $stopwatch;
     protected FilesystemAdapter       $templateCache;
-    private ContaoFramework           $contaoFramework;
+    protected ContaoFramework         $contaoFramework;
+    protected ParameterBag            $parameterBag;
 
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache, ContaoFramework $contaoFramework)
-    {
+    public function __construct(
+        KernelInterface         $kernel,
+        ResourceFinderInterface $contaoResourceFinder,
+        RequestStack            $requestStack,
+        ScopeMatcher            $scopeMatcher,
+        Stopwatch               $stopwatch,
+        FilesystemAdapter       $templateCache,
+        ContaoFramework         $contaoFramework,
+        ParameterBag            $parameterBag
+    ) {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
         $this->requestStack = $requestStack;
@@ -49,6 +59,7 @@ class TwigTemplateLocator
         $this->stopwatch = $stopwatch;
         $this->templateCache = $templateCache;
         $this->contaoFramework = $contaoFramework;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -324,7 +335,7 @@ class TwigTemplateLocator
             }
 
             if (!$twigKey) {
-                $twigFiles[$name]['paths'][] = Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
+                $twigFiles[$name]['paths'][] = Path::makeRelative($file->getPathname(), $this->parameterBag->get('kernel.project_dir').'/templates');
             } else {
                 $twigFiles[$name]['paths'][] = "@$twigKey/".$file->getRelativePathname();
             }
@@ -380,7 +391,7 @@ class TwigTemplateLocator
             }
 
             if (!$twigKey) {
-                $path = Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
+                $path = Path::makeRelative($file->getPathname(), $this->parameterBag->get('kernel.project_dir').'/templates');
                 $twigFiles[$name]['paths'][]                     = $path;
                 $twigFiles[$name]['pathInfo'][$path]['bundle']   = null;
                 $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
@@ -443,11 +454,11 @@ class TwigTemplateLocator
         // Project template folders
         $twigFiles = array_merge_recursive(
             $twigFiles,
-            $this->getTemplatesInPath($this->kernel->getProjectDir().'/contao/templates', $bundle, ['extension' => $extension])
+            $this->getTemplatesInPath($this->parameterBag->get('kernel.project_dir').'/contao/templates', $bundle, ['extension' => $extension])
         );
         $twigFiles = array_merge_recursive(
             $twigFiles,
-            $this->getTemplatesInPath($this->kernel->getProjectDir().'/templates', null, ['extension' => $extension])
+            $this->getTemplatesInPath($this->parameterBag->get('kernel.project_dir').'/templates', null, ['extension' => $extension])
         );
 
         return $twigFiles;
