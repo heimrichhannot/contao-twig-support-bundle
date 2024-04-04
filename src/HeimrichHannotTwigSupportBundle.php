@@ -9,16 +9,17 @@
 namespace HeimrichHannot\TwigSupportBundle;
 
 use HeimrichHannot\TwigSupportBundle\DependencyInjection\HeimrichHannotTwigSupportExtension;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class HeimrichHannotTwigSupportBundle extends Bundle
 {
-    public function getContainerExtension()
+    public function getContainerExtension(): ?ExtensionInterface
     {
         return new HeimrichHannotTwigSupportExtension();
     }
 
-    public function getPath()
+    public function getPath(): string
     {
         return \dirname(__DIR__);
     }

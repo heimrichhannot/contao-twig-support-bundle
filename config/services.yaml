@@ -24,3 +24,8 @@ services:
       - !php/const HeimrichHannot\TwigSupportBundle\Cache\TemplateCache::CACHE_POOL_NAME
       - '%huh_twig_support.template_cache_lifetime%'
       - '%kernel.cache_dir%'
+
+  huh_twig_support.twig.deserialize_extension:
+    class: HeimrichHannot\TwigSupportBundle\Twig\DeserializeExtension
+    tags:
+      - { name: twig.extension }

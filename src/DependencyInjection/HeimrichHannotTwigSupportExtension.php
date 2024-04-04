@@ -29,7 +29,7 @@ class HeimrichHannotTwigSupportExtension extends Extension
         $container->setParameter('huh_twig_support.template_cache_lifetime', $bundleConfig['template_cache_lifetime'] ?: 0);
     }
 
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'huh_twig_support';
     }

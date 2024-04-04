@@ -18,6 +18,7 @@ use HeimrichHannot\TestUtilitiesBundle\Mock\ModelMockTrait;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use PHPUnit\Framework\MockObject\MockBuilder;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -64,6 +65,10 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             $parameter['cache'] = $this->createMock(FilesystemAdapter::class);
         }
 
+        if (!isset($parameter['parameterBag'])) {
+            $parameter['parameterBag'] = $this->createMock(ParameterBagInterface::class);
+        }
+
         $contaoFramework = $parameter['framework'] ?? $this->mockContaoFramework([
             ThemeModel::class => $this->mockAdapter(['findAll']),
         ]);
@@ -77,18 +82,20 @@ class TwigTemplateLocatorTest extends ContaoTestCase
                 $this->createMock(Stopwatch::class),
                 $parameter['cache'],
                 $contaoFramework,
+                $parameter['parameterBag'],
             ])->getMock();
         }
 
         return new TwigTemplateLocator(
-                $parameter['kernel'],
-                $parameter['resource_finder'],
-                $parameter['request_stack'],
-                $parameter['scope_matcher'],
-                $this->createMock(Stopwatch::class),
-                $parameter['cache'],
-                $contaoFramework
-            );
+            $parameter['kernel'],
+            $parameter['resource_finder'],
+            $parameter['request_stack'],
+            $parameter['scope_matcher'],
+            $this->createMock(Stopwatch::class),
+            $parameter['cache'],
+            $contaoFramework,
+            $parameter['parameterBag'],
+        );
     }
 
     public function testGetTemplateGroup()
