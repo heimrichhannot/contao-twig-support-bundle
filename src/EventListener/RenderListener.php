@@ -192,6 +192,11 @@ class RenderListener implements ServiceSubscriberInterface
 
         $twigTemplatePath = $this->templateLocator->getTemplatePath($twigTemplateName);
 
+        if ('@Contao/news_stage.html.twig' === $twigTemplatePath) {
+            $twigTemplatePath = '@Contao/news/news_stage.html.twig';
+        }
+
+
         if ($contaoTemplate instanceof Widget) {
             $twigTemplateData['widget'] = $contaoTemplate;
         }

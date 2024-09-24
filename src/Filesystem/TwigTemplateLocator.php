@@ -12,11 +12,15 @@ use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Contao\CoreBundle\Twig\ContaoTwigUtil;
+use Contao\CoreBundle\Twig\Finder\FinderFactory;
+use Contao\CoreBundle\Twig\Loader\TemplateLocator;
 use Contao\PageModel;
 use Contao\ThemeModel;
 use Contao\Validator;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
+use http\Encoding\Stream\Inflate;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
@@ -26,6 +30,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
+use Twig\Environment;
 use Webmozart\PathUtil\Path;
 
 class TwigTemplateLocator
@@ -39,8 +44,25 @@ class TwigTemplateLocator
     protected Stopwatch               $stopwatch;
     protected FilesystemAdapter       $templateCache;
     private ContaoFramework           $contaoFramework;
+    private Environment $twig;
+    private FinderFactory $finderFactory;
+    private TemplateLocator $templateLocator;
 
-    public function __construct(KernelInterface $kernel, ResourceFinderInterface $contaoResourceFinder, RequestStack $requestStack, ScopeMatcher $scopeMatcher, Stopwatch $stopwatch, FilesystemAdapter $templateCache, ContaoFramework $contaoFramework)
+    /** @var array|string[] */
+    private array $resourcePaths;
+
+    public function __construct(
+        KernelInterface $kernel,
+        ResourceFinderInterface $contaoResourceFinder,
+        RequestStack $requestStack,
+        ScopeMatcher $scopeMatcher,
+        Stopwatch $stopwatch,
+        FilesystemAdapter $templateCache,
+        ContaoFramework $contaoFramework,
+        Environment $twig,
+        FinderFactory $finderFactory,
+        TemplateLocator $templateLocator
+    )
     {
         $this->kernel = $kernel;
         $this->contaoResourceFinder = $contaoResourceFinder;
@@ -49,6 +71,9 @@ class TwigTemplateLocator
         $this->stopwatch = $stopwatch;
         $this->templateCache = $templateCache;
         $this->contaoFramework = $contaoFramework;
+        $this->twig = $twig;
+        $this->finderFactory = $finderFactory;
+        $this->templateLocator = $templateLocator;
     }
 
     /**
@@ -371,6 +396,8 @@ class TwigTemplateLocator
 
         $twigFiles = [];
 
+        $finder = $this->finderFactory->create();
+
         foreach ($files as $file) {
             /** @var SplFileInfo $file */
             $name = $file->getBasename();
@@ -387,14 +414,28 @@ class TwigTemplateLocator
             }
             elseif ('Contao' === $twigKey) {
                 $path = "@$twigKey/".$file->getBasename();
+
+
+
+                if (!$this->twig->getLoader()->exists($path)) {
+                    foreach ($finder->name($file->getRelativePathname())->getIterator() as $identifier => $extension) {
+
+                    }
+                }
+
+
+                foreach ($finder->name($file->getRelativePathname())->getIterator() as $identifier => $extension) {
+                    continue;
+                }
+
+
+                $path = "@$twigKey/".$file->getBasename();
                 $twigFiles[$name]['paths'][] = $path;
                 $twigFiles[$name]['pathInfo'][$path]['bundle'] = null;
                 $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
             } else {
                 $path = "@$twigKey/".$file->getRelativePathname();
-                $twigFiles[$name]['paths'][] = $path;
-                $twigFiles[$name]['pathInfo'][$path]['bundle'] = $bundle->getName();
-                $twigFiles[$name]['pathInfo'][$path]['pathname'] = $file->getPathname();
+                $this->addPath($twigFiles, $name, $path, $bundle->getName(), $file->getPathname());
             }
         }
         $this->stopwatch->stop($stopwatchname);
@@ -407,7 +448,71 @@ class TwigTemplateLocator
      */
     protected function generateContaoTwigTemplatePaths(bool $extension = false): array
     {
+        $contaoResourcePaths = $this->templateLocator->findResourcesPaths();
         $bundles = $this->kernel->getBundles();
+
+        $resourcePaths = [];
+        if (\is_array($bundles)) {
+            foreach ($bundles as $key => $bundle) {
+                $path = $bundle->getPath();
+
+                foreach (['/templates', '/Resources/views',] as $subpath) {
+                    if (!is_dir($dir = rtrim($path, '/').$subpath)) {
+                        continue;
+                    }
+
+                    $resourcePaths[$key][] = $dir;
+                }
+                if (isset($contaoResourcePaths[$key])) {
+                    $resourcePaths[$key] = array_merge(($resourcePaths[$key] ?? []), $contaoResourcePaths[$key]);
+                }
+            }
+        }
+
+        if (isset($contaoResourcePaths['App'])) {
+            $resourcePaths['App'] = $contaoResourcePaths['App'];
+        }
+
+        $twigFiles = [];
+        $projectDir = $this->kernel->getProjectDir();
+        foreach ($resourcePaths as $bundle => $paths) {
+            foreach ($paths as $path) {
+                $templates = $this->templateLocator->findTemplates($path);
+                if (empty($templates)) {
+                    continue;
+                }
+
+                if ('App' === $bundle) {
+                    if (str_contains($path, '/contao/templates')) {
+                        $namespace = 'Contao_App';
+                    } else {
+                        $namespace = '';
+                    }
+                } else {
+                    if (str_contains($path, '/contao/templates')) {
+                        $namespace = 'Contao_'.$bundle;
+                    } else {
+                        $namespace = $bundle;
+                    }
+                }
+
+                foreach ($templates as $name => $templatePath) {
+                    if (str_ends_with($name, '.html5')) {
+                        continue;
+                    }
+
+                    $twigPath = ($namespace ? "@$namespace/" : '').$name;
+
+
+//                    Path::makeRelative($file->getPathname(), $this->kernel->getProjectDir().'/templates');
+
+                    $this->addPath($twigFiles, $name, $twigPath, $bundle, $path);
+                }
+            }
+        }
+
+        return $twigFiles;
+
         $twigFiles = [];
 
         if (\is_array($bundles)) {
@@ -451,5 +556,12 @@ class TwigTemplateLocator
         );
 
         return $twigFiles;
+    }
+
+    private function addPath(array &$pathData, string $name, string $twigPath, ?string $bundleName, string $absolutePath): void
+    {
+        $pathData[$name]['paths'][]                     = $twigPath;
+        $pathData[$name]['pathInfo'][$twigPath]['bundle']   = $bundleName;
+        $pathData[$name]['pathInfo'][$twigPath]['pathname'] = $absolutePath;
     }
 }
