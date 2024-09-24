@@ -12,6 +12,7 @@ use Contao\CoreBundle\Config\ResourceFinder;
 use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Routing\ScopeMatcher;
+use Contao\CoreBundle\Twig\Loader\TemplateLocator;
 use Contao\TestCase\ContaoTestCase;
 use Contao\ThemeModel;
 use HeimrichHannot\TestUtilitiesBundle\Mock\ModelMockTrait;
@@ -80,6 +81,8 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             ])->getMock();
         }
 
+        $contaoTemplateLocator = $this->createMock(TemplateLocator::class);
+
         return new TwigTemplateLocator(
                 $parameter['kernel'],
                 $parameter['resource_finder'],
@@ -87,7 +90,8 @@ class TwigTemplateLocatorTest extends ContaoTestCase
                 $parameter['scope_matcher'],
                 $this->createMock(Stopwatch::class),
                 $parameter['cache'],
-                $contaoFramework
+                $contaoFramework,
+            $contaoTemplateLocator
             );
     }
 
