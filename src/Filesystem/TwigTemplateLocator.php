@@ -422,7 +422,6 @@ class TwigTemplateLocator
         $stopwatchname = 'TwigTemplateLocator::generateContaoTwigTemplatePaths()';
         $this->stopwatch->start($stopwatchname);
 
-
         $contaoResourcePaths = $this->templateLocator->findResourcesPaths();
         $bundles = $this->kernel->getBundles();
 
@@ -446,6 +445,9 @@ class TwigTemplateLocator
 
         if (isset($contaoResourcePaths['App'])) {
             $resourcePaths['App'] = $contaoResourcePaths['App'];
+            if (!in_array($this->kernel->getProjectDir().'/templates', $resourcePaths['App'])) {
+                $resourcePaths['App'][] = $this->kernel->getProjectDir().'/templates';
+            }
         }
 
         $twigFiles = [];

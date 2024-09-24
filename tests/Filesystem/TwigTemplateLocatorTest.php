@@ -13,8 +13,10 @@ use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Routing\ScopeMatcher;
 use Contao\CoreBundle\Twig\Loader\TemplateLocator;
+use Contao\CoreBundle\Twig\Loader\ThemeNamespace;
 use Contao\TestCase\ContaoTestCase;
 use Contao\ThemeModel;
+use Doctrine\DBAL\Connection;
 use HeimrichHannot\TestUtilitiesBundle\Mock\ModelMockTrait;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use PHPUnit\Framework\MockObject\MockBuilder;
@@ -69,6 +71,10 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             ThemeModel::class => $this->mockAdapter(['findAll']),
         ]);
 
+        if (!isset($parameter['locator'])) {
+            $parameter['locator'] = $this->createMock(TemplateLocator::class);
+        }
+
         if ($mockBuilder) {
             return $mockBuilder->setConstructorArgs([
                 $parameter['kernel'],
@@ -78,10 +84,10 @@ class TwigTemplateLocatorTest extends ContaoTestCase
                 $this->createMock(Stopwatch::class),
                 $parameter['cache'],
                 $contaoFramework,
+                $parameter['locator'],
             ])->getMock();
         }
 
-        $contaoTemplateLocator = $this->createMock(TemplateLocator::class);
 
         return new TwigTemplateLocator(
                 $parameter['kernel'],
@@ -91,7 +97,7 @@ class TwigTemplateLocatorTest extends ContaoTestCase
                 $this->createMock(Stopwatch::class),
                 $parameter['cache'],
                 $contaoFramework,
-            $contaoTemplateLocator
+            $parameter['locator']
             );
     }
 
@@ -205,11 +211,12 @@ class TwigTemplateLocatorTest extends ContaoTestCase
 
     public function testGenerateContaoTwigTemplatePathsBundles()
     {
-        [$kernel, $resourceFinder] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'bundles');
+        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'bundles');
 
         $instance = $this->createTestInstance([
             'kernel' => $kernel,
             'resource_finder' => $resourceFinder,
+            'locator' => $templateLocator,
         ]);
         $templates = $instance->getTemplates(false, true);
         $this->assertNotEmpty($templates);
@@ -222,7 +229,7 @@ class TwigTemplateLocatorTest extends ContaoTestCase
 
     public function testGetTemplatePath()
     {
-        [$kernel, $resourceFinder] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'bundles');
+        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'project');
         $scopeMather = $this->createMock(ScopeMatcher::class);
         $scopeMather->method('isFrontendRequest')->willReturn(false);
 
@@ -230,19 +237,23 @@ class TwigTemplateLocatorTest extends ContaoTestCase
             'kernel' => $kernel,
             'resource_finder' => $resourceFinder,
             'scope_matcher' => $scopeMather,
-        ]);
-        $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
-
-        [$kernel, $resourceFinder] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'mixed');
-        $scopeMather = $this->createMock(ScopeMatcher::class);
-        $scopeMather->method('isFrontendRequest')->willReturn(false);
-
-        $instance = $this->createTestInstance([
-            'kernel' => $kernel,
-            'resource_finder' => $resourceFinder,
-            'scope_matcher' => $scopeMather,
+            'locator' => $templateLocator,
         ]);
         $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('content_element/text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text', ['disableCache' => true]));
+
+        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'mixed');
+        $scopeMather = $this->createMock(ScopeMatcher::class);
+        $scopeMather->method('isFrontendRequest')->willReturn(false);
+
+        $instance = $this->createTestInstance([
+            'kernel' => $kernel,
+            'resource_finder' => $resourceFinder,
+            'scope_matcher' => $scopeMather,
+            'locator' => $templateLocator,
+        ]);
+        $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
     }
 
     protected function buildKernelAndResourceFinderForBundlesAndPath(array $bundles, string $subpath)
@@ -268,6 +279,13 @@ class TwigTemplateLocatorTest extends ContaoTestCase
 
         $resourceFinder = new ResourceFinder($resourcePaths);
 
-        return [$kernel, $resourceFinder];
+
+        $bundleMetaData = [];
+        foreach ($kernelBundles as $bundle) {
+            $bundleMetaData[$bundle->getName()] = ['path' => $bundle->getPath()];
+        }
+        $templateLocator = new TemplateLocator(__DIR__.'/../Fixtures/templateLocator/'.$subpath, [], [], new ThemeNamespace(), $this->createMock(Connection::class));
+
+        return [$kernel, $resourceFinder, $templateLocator];
     }
 }
