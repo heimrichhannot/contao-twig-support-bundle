@@ -11,7 +11,6 @@ namespace HeimrichHannot\TwigSupportBundle\Filesystem;
 use Contao\CoreBundle\Config\ResourceFinderInterface;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Routing\ScopeMatcher;
-use Contao\CoreBundle\Twig\Finder\FinderFactory;
 use Contao\CoreBundle\Twig\Loader\TemplateLocator;
 use Contao\PageModel;
 use Contao\ThemeModel;
@@ -19,6 +18,7 @@ use Contao\Validator;
 use HeimrichHannot\TwigSupportBundle\Cache\TemplateCache;
 use HeimrichHannot\TwigSupportBundle\Exception\TemplateNotFoundException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -26,8 +26,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
-use Twig\Environment;
-use Webmozart\PathUtil\Path;
 
 class TwigTemplateLocator
 {
@@ -40,12 +38,7 @@ class TwigTemplateLocator
     protected Stopwatch               $stopwatch;
     protected FilesystemAdapter       $templateCache;
     private ContaoFramework           $contaoFramework;
-    private Environment $twig;
-    private FinderFactory $finderFactory;
     private TemplateLocator $templateLocator;
-
-    /** @var array|string[] */
-    private array $resourcePaths;
 
     public function __construct(
         KernelInterface $kernel,
@@ -55,8 +48,6 @@ class TwigTemplateLocator
         Stopwatch $stopwatch,
         FilesystemAdapter $templateCache,
         ContaoFramework $contaoFramework,
-        Environment $twig,
-        FinderFactory $finderFactory,
         TemplateLocator $templateLocator
     )
     {
@@ -67,8 +58,6 @@ class TwigTemplateLocator
         $this->stopwatch = $stopwatch;
         $this->templateCache = $templateCache;
         $this->contaoFramework = $contaoFramework;
-        $this->twig = $twig;
-        $this->finderFactory = $finderFactory;
         $this->templateLocator = $templateLocator;
     }
 
@@ -460,7 +449,6 @@ class TwigTemplateLocator
         }
 
         $twigFiles = [];
-        $projectDir = $this->kernel->getProjectDir();
         foreach ($resourcePaths as $bundle => $paths) {
             foreach ($paths as $path) {
                 $templates = $this->templateLocator->findTemplates($path);
