@@ -354,6 +354,7 @@ class TwigTemplateLocator
      * @param iterable|string $dir
      *
      * @deprecated Use Contao\CoreBundle\Twig\Loader\TemplateLocator::findTemplates()
+     * @codeCoverageIgnore
      */
     public function getTemplatesInPath($dir, ?BundleInterface $bundle = null, array $options = []): array
     {
