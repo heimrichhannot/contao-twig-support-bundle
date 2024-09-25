@@ -93,7 +93,7 @@ class TwigTemplateLocator
             /* @var PageModel $objPage */
             global $objPage;
 
-            if ('' != $objPage->templateGroup) {
+            if ($objPage && '' != $objPage->templateGroup) {
                 if (Validator::isInsecurePath($objPage->templateGroup)) {
                     throw new \RuntimeException('Invalid path '.$objPage->templateGroup);
                 }
@@ -424,6 +424,7 @@ class TwigTemplateLocator
         $this->stopwatch->start($stopwatchname);
 
         $contaoResourcePaths = $this->templateLocator->findResourcesPaths();
+        $contaoThemePaths = $this->templateLocator->findThemeDirectories();
         $bundles = $this->kernel->getBundles();
 
         $resourcePaths = [];
@@ -454,6 +455,7 @@ class TwigTemplateLocator
         $twigFiles = [];
         foreach ($resourcePaths as $bundle => $paths) {
             foreach ($paths as $path) {
+                $path = Path::canonicalize($path);
                 $templates = $this->templateLocator->findTemplates($path);
                 if (empty($templates)) {
                     continue;
@@ -478,7 +480,17 @@ class TwigTemplateLocator
                         continue;
                     }
 
-                    $twigPath = ($namespace ? "@$namespace/" : '').$name;
+                    if (empty($namespace) && str_contains($name, '/')) {
+                        $parts = explode('/', $name);
+                        if (isset($contaoThemePaths[$parts[0]])
+                            && (Path::getLongestCommonBasePath($contaoThemePaths[$parts[0]], $templatePath)) === $contaoThemePaths[$parts[0]]) {
+                            $namespace = $parts[0];
+                            $name = Path::makeRelative($templatePath, $contaoThemePaths[$parts[0]]);
+                        }
+                        $twigPath = ($namespace ? "$namespace/" : '').$name;
+                    } else {
+                        $twigPath = ($namespace ? "@$namespace/" : '').$name;
+                    }
 
                     if (!$extension) {
                         if (str_ends_with($name, '.html.twig')) {

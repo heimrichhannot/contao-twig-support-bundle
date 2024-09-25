@@ -256,6 +256,64 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
     }
 
+    public function testGetTemplatePathNews()
+    {
+        $instance = $this->createTestInstance($this->prepareTemplateLoader([]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('content_element/text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/form_text.html.twig', $instance->getTemplatePath('form_text', ['disableCache' => true]));
+        $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+
+        $parameters = $this->prepareTemplateLoader([]);
+        $scopeMather = $this->createMock(ScopeMatcher::class);
+        $scopeMather->method('isFrontendRequest')->willReturn(true);
+        $parameters['scope_matcher'] = $scopeMather;
+        $instance = $this->createTestInstance($parameters);
+        $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $GLOBALS['objPage'] = (object) ['templateGroup' => 'customtheme'];
+        $this->assertSame('customtheme/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+    }
+
+    private function prepareTemplateLoader(array $parameters): array
+    {
+        $projectDir = __DIR__.'/../Fixtures/TwigTemplateLocator';
+        $kernel = $this->createMock(Kernel::class);
+        $bundles = [];
+        $bundleMetaData = [];
+        foreach (['a', 'b'] as $bundle) {
+            $currentBundle = $this->createMock(BundleInterface::class);
+            $bundlePath = $projectDir.'/vendor/example/'.$bundle;
+            $currentBundle->method('getPath')->willReturn($bundlePath);
+            $currentBundle->method('getName')->willReturn($bundle);
+            $kernelBundles[$bundle] = $currentBundle;
+            $bundles[$bundle] = BundleInterface::class;
+            $bundleMetaData[$bundle] = ['path' => $bundlePath];
+        }
+
+        $kernel->method('getBundles')->willReturn($kernelBundles);
+        $kernel->method('getProjectDir')->willReturn($projectDir);
+
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchFirstColumn')->willReturn([
+            'templates/customtheme',
+            'templates/anothertheme',
+        ]);
+
+        $templateLocator = new TemplateLocator(
+            $projectDir,
+            $bundles,
+            $bundleMetaData,
+            new ThemeNamespace(),
+            $connection
+        );
+
+        $parameters['kernel'] = $kernel;
+        $parameters['locator'] = $templateLocator;
+
+        return $parameters;
+    }
+
+
     protected function buildKernelAndResourceFinderForBundlesAndPath(array $bundles, string $subpath)
     {
         $kernel = $this->createMock(Kernel::class);
