@@ -269,9 +269,22 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $scopeMather->method('isFrontendRequest')->willReturn(true);
         $parameters['scope_matcher'] = $scopeMather;
         $instance = $this->createTestInstance($parameters);
+
         $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/ce_headline.html.twig', $instance->getTemplatePath('ce_headline', ['disableCache' => true]));
+        $this->assertSame('@Contao_a/ce_html.html.twig', $instance->getTemplatePath('ce_html', ['disableCache' => true]));
+
         $GLOBALS['objPage'] = (object) ['templateGroup' => 'customtheme'];
-        $this->assertSame('customtheme/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_Theme_customtheme/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_Theme_customtheme/ce_headline.html.twig', $instance->getTemplatePath('ce_headline', ['disableCache' => true]));
+        $this->assertSame('@Contao_a/ce_html.html.twig', $instance->getTemplatePath('ce_html', ['disableCache' => true]));
+
+        $GLOBALS['objPage'] = (object) ['templateGroup' => 'anothertheme'];
+        $this->assertSame('@Contao_Theme_anothertheme/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/ce_headline.html.twig', $instance->getTemplatePath('ce_headline', ['disableCache' => true]));
+        $this->assertSame('@Contao_Theme_anothertheme/ce_html.html.twig', $instance->getTemplatePath('ce_html', ['disableCache' => true]));
+
+        unset($GLOBALS['objPage']);
     }
 
     private function prepareTemplateLoader(array $parameters): array

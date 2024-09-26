@@ -117,7 +117,7 @@ class TwigTemplateLocator
             $pathLength = \strlen($themeFolder);
 
             foreach ($template['paths'] as $path) {
-                if ($themeFolder === substr($path, 0, $pathLength)) {
+                if (str_starts_with($path, '@Contao_Theme_'.$themeFolder)) {
                     return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
                 }
             }
@@ -128,6 +128,16 @@ class TwigTemplateLocator
                 return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
             }
         }
+
+        $key = array_key_last($template['paths']);
+        while (isset($template['paths'][$key])) {
+            if (!str_starts_with($template['paths'][$key], '@Contao_Theme_')) {
+                return new TemplateContext($templateName, $template['paths'][$key], $template['pathInfo'][$template['paths'][$key]]);
+            }
+            $key--;
+        }
+
+        throw new TemplateNotFoundException(sprintf('Unable to find template "%s".', $templateName));
 
         $path = end($template['paths']);
 
@@ -480,17 +490,18 @@ class TwigTemplateLocator
                         continue;
                     }
 
+                    $prefix = $namespace;
+
                     if (empty($namespace) && str_contains($name, '/')) {
                         $parts = explode('/', $name);
                         if (isset($contaoThemePaths[$parts[0]])
                             && (Path::getLongestCommonBasePath($contaoThemePaths[$parts[0]], $templatePath)) === $contaoThemePaths[$parts[0]]) {
-                            $namespace = $parts[0];
+                            $prefix = 'Contao_Theme_'.$parts[0];
                             $name = Path::makeRelative($templatePath, $contaoThemePaths[$parts[0]]);
                         }
-                        $twigPath = ($namespace ? "$namespace/" : '').$name;
-                    } else {
-                        $twigPath = ($namespace ? "@$namespace/" : '').$name;
                     }
+
+                    $twigPath = ($prefix ? "@$prefix/" : '').$name;
 
                     if (!$extension) {
                         if (str_ends_with($name, '.html.twig')) {
