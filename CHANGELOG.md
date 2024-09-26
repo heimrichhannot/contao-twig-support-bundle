@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2023-03-21
+## [1.8.0] - 2024-09-26
+- Changed: better support for contao twig engine
+- Changed: require contao 4.13
+- Deprecated: TwigTemplateLoader::getTemplatesInPath()
+
+## [1.7.0] - 2024-03-21
 - Changed: modernized bundle structure
 
 ## [1.6.3] - 2023-03-21
