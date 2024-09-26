@@ -1,6 +1,6 @@
 composer.lock
 .idea
-vendor
+/vendor
 .phpunit.result.cache
 .ddev
 build
