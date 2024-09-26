@@ -138,10 +138,6 @@ class TwigTemplateLocator
         }
 
         throw new TemplateNotFoundException(sprintf('Unable to find template "%s".', $templateName));
-
-        $path = end($template['paths']);
-
-        return new TemplateContext($templateName, $path, $template['pathInfo'][$path]);
     }
 
     /**
@@ -298,7 +294,8 @@ class TwigTemplateLocator
                     $cacheItem->set($this->generateContaoTwigTemplatePaths($extension));
                     $this->templateCache->save($cacheItem);
                 }
-                $cachedTemplates = $this->templateCache->getItem($cacheKey)->get();
+
+                $cachedTemplates = $cacheItem->get();
 
                 if (!\is_array($cachedTemplates)) {
                     // clean invalid cache entry

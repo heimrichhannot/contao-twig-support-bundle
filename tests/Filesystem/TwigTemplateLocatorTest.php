@@ -20,6 +20,7 @@ use Doctrine\DBAL\Connection;
 use HeimrichHannot\TestUtilitiesBundle\Mock\ModelMockTrait;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use PHPUnit\Framework\MockObject\MockBuilder;
+use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -191,72 +192,7 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         ], $instance->getTemplateGroup('prefix'));
     }
 
-    public function testGenerateContaoTwigTemplatePathsEmpty()
-    {
-        $kernel = $this->createMock(Kernel::class);
-        $kernel->method('getBundles')->willReturn([]);
-        $kernel->method('getProjectDir')->willReturn(__DIR__.'/../Fixtures/templateLocator/empty');
-
-        $resourceFinder = $this->getMockBuilder(ResourceFinderInterface::class)->setMethods(['find', 'findIn', 'name', 'getIterator'])->getMock();
-        $resourceFinder->method('findIn')->willReturnSelf();
-        $resourceFinder->method('name')->willReturnSelf();
-        $resourceFinder->method('getIterator')->willReturn([]);
-
-        $instance = $this->createTestInstance([
-            'kernel' => $kernel,
-            'resource_finder' => $resourceFinder,
-        ]);
-        $this->assertEmpty($instance->getTemplates(false, true));
-    }
-
-    public function testGenerateContaoTwigTemplatePathsBundles()
-    {
-        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'bundles');
-
-        $instance = $this->createTestInstance([
-            'kernel' => $kernel,
-            'resource_finder' => $resourceFinder,
-            'locator' => $templateLocator,
-        ]);
-        $templates = $instance->getTemplates(false, true);
-        $this->assertNotEmpty($templates);
-        $this->assertArrayHasKey('ce_text', $templates);
-
-        $templates = $instance->getTemplates(true, true);
-        $this->assertNotEmpty($templates);
-        $this->assertArrayHasKey('ce_text.html.twig', $templates);
-    }
-
     public function testGetTemplatePath()
-    {
-        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'project');
-        $scopeMather = $this->createMock(ScopeMatcher::class);
-        $scopeMather->method('isFrontendRequest')->willReturn(false);
-
-        $instance = $this->createTestInstance([
-            'kernel' => $kernel,
-            'resource_finder' => $resourceFinder,
-            'scope_matcher' => $scopeMather,
-            'locator' => $templateLocator,
-        ]);
-        $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
-        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('content_element/text', ['disableCache' => true]));
-        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text', ['disableCache' => true]));
-
-        [$kernel, $resourceFinder, $templateLocator] = $this->buildKernelAndResourceFinderForBundlesAndPath(['dolarBundle', 'ipsumBundle'], 'mixed');
-        $scopeMather = $this->createMock(ScopeMatcher::class);
-        $scopeMather->method('isFrontendRequest')->willReturn(false);
-
-        $instance = $this->createTestInstance([
-            'kernel' => $kernel,
-            'resource_finder' => $resourceFinder,
-            'scope_matcher' => $scopeMather,
-            'locator' => $templateLocator,
-        ]);
-        $this->assertSame('@ipsum/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
-    }
-
-    public function testGetTemplatePathNews()
     {
         $instance = $this->createTestInstance($this->prepareTemplateLoader([]));
         $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text', ['disableCache' => true]));
@@ -285,6 +221,26 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $this->assertSame('@Contao_Theme_anothertheme/ce_html.html.twig', $instance->getTemplatePath('ce_html', ['disableCache' => true]));
 
         unset($GLOBALS['objPage']);
+    }
+
+    public function testGetTemplates()
+    {
+        $mock = $this->getMockBuilder(TwigTemplateLocator::class)->onlyMethods(['generateContaoTwigTemplatePaths']);
+        $parameters = $this->prepareTemplateLoader([]);
+
+        $cacheItem = $this->createMock(CacheItemInterface::class);
+        $cacheItem->method('isHit')->willReturnOnConsecutiveCalls(false, true);
+        $cacheItem->method('get')->willReturn([]);
+
+        $cache = $this->createMock(FilesystemAdapter::class);
+        $cache->method('getItem')->willReturn($cacheItem);
+        $parameters['cache'] = $cache;
+
+        $instance = $this->createTestInstance($parameters, $mock);
+        $instance->expects($this->once())->method('generateContaoTwigTemplatePaths')->willReturn([]);
+
+        $instance->getTemplates();
+        $instance->getTemplates();
     }
 
     private function prepareTemplateLoader(array $parameters): array
