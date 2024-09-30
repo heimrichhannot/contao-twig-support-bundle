@@ -196,8 +196,13 @@ class TwigTemplateLocatorTest extends ContaoTestCase
     {
         $instance = $this->createTestInstance($this->prepareTemplateLoader([]));
         $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('text.html.twig', ['disableCache' => true]));
         $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('content_element/text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/content_element/text.html.twig', $instance->getTemplatePath('content_element/text.html.twig', ['disableCache' => true]));
         $this->assertSame('@Contao_App/form_text.html.twig', $instance->getTemplatePath('form_text', ['disableCache' => true]));
+        $this->assertSame('@Contao_App/form_text.html.twig', $instance->getTemplatePath('form_text.html.twig', ['disableCache' => true]));
+
+        $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
         $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
 
         $parameters = $this->prepareTemplateLoader([]);
@@ -209,6 +214,8 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $this->assertSame('ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
         $this->assertSame('@Contao_App/ce_headline.html.twig', $instance->getTemplatePath('ce_headline', ['disableCache' => true]));
         $this->assertSame('@Contao_a/ce_html.html.twig', $instance->getTemplatePath('ce_html', ['disableCache' => true]));
+        $this->assertSame('@b/elements/ce_image.html.twig', $instance->getTemplatePath('ce_image', ['disableCache' => true]));
+        $this->assertSame('@b/elements/ce_image.html.twig', $instance->getTemplatePath('ce_image.html.twig', ['disableCache' => true]));
 
         $GLOBALS['objPage'] = (object) ['templateGroup' => 'customtheme'];
         $this->assertSame('@Contao_Theme_customtheme/ce_text.html.twig', $instance->getTemplatePath('ce_text', ['disableCache' => true]));
@@ -281,7 +288,6 @@ class TwigTemplateLocatorTest extends ContaoTestCase
 
         return $parameters;
     }
-
 
     protected function buildKernelAndResourceFinderForBundlesAndPath(array $bundles, string $subpath)
     {

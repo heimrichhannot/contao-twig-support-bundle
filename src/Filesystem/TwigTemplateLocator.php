@@ -439,7 +439,7 @@ class TwigTemplateLocator
             foreach ($bundles as $key => $bundle) {
                 $path = $bundle->getPath();
 
-                foreach (['/templates', '/Resources/views',] as $subpath) {
+                foreach (['/templates', '/src/Resources/views',] as $subpath) {
                     if (!is_dir($dir = rtrim($path, '/').$subpath)) {
                         continue;
                     }
@@ -463,11 +463,8 @@ class TwigTemplateLocator
         foreach ($resourcePaths as $bundle => $paths) {
             foreach ($paths as $path) {
                 $path = Path::canonicalize($path);
-                $templates = $this->templateLocator->findTemplates($path);
-                if (empty($templates)) {
-                    continue;
-                }
 
+                $useContaoTemplateLocator = true;
                 if ('App' === $bundle) {
                     if (str_contains($path, '/contao/templates')) {
                         $namespace = 'Contao_App';
@@ -479,7 +476,21 @@ class TwigTemplateLocator
                         $namespace = 'Contao_'.$bundle;
                     } else {
                         $namespace = preg_replace('/Bundle$/', '', $bundle);
+                        $useContaoTemplateLocator = false;
                     }
+                }
+
+                if ($useContaoTemplateLocator) {
+                    $templates = $this->templateLocator->findTemplates($path);
+                } else {
+                    $templates = [];
+                    $foundPaths = (new Finder())->in($path)->files()->followLinks()->name('*.twig')->sortByName()->getIterator();
+                    foreach ($foundPaths as $file) {
+                        $templates[$file->getBasename()] = $file->getPathname();
+                    }
+                }
+                if (empty($templates)) {
+                    continue;
                 }
 
                 foreach ($templates as $name => $templatePath) {
@@ -496,6 +507,8 @@ class TwigTemplateLocator
                             $prefix = 'Contao_Theme_'.$parts[0];
                             $name = Path::makeRelative($templatePath, $contaoThemePaths[$parts[0]]);
                         }
+                    } elseif (!$useContaoTemplateLocator) {
+                        $name = Path::makeRelative($templatePath, $path);
                     }
 
                     $twigPath = ($prefix ? "@$prefix/" : '').$name;
@@ -515,7 +528,7 @@ class TwigTemplateLocator
 
                     $file = new \SplFileInfo($templatePath);
                     $name = $file->getBasename();
-                    if (str_ends_with($name, '.html.twig')) {
+                    if (!$extension && str_ends_with($name, '.html.twig')) {
                         $name = substr($name, 0, -10);
                     }
 
