@@ -439,7 +439,7 @@ class TwigTemplateLocator
             foreach ($bundles as $key => $bundle) {
                 $path = $bundle->getPath();
 
-                foreach (['/templates', '/src/Resources/views',] as $subpath) {
+                foreach (['/templates', '/Resources/views',] as $subpath) {
                     if (!is_dir($dir = rtrim($path, '/').$subpath)) {
                         continue;
                     }

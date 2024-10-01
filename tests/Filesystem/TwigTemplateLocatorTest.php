@@ -256,9 +256,12 @@ class TwigTemplateLocatorTest extends ContaoTestCase
         $kernel = $this->createMock(Kernel::class);
         $bundles = [];
         $bundleMetaData = [];
-        foreach (['a', 'b'] as $bundle) {
+        $kernelBundles = [
+            'a' => $projectDir . '/vendor/example/a',
+            'b' => $projectDir . '/vendor/example/b/src',
+        ];
+        foreach ($kernelBundles as $bundle => $bundlePath) {
             $currentBundle = $this->createMock(BundleInterface::class);
-            $bundlePath = $projectDir.'/vendor/example/'.$bundle;
             $currentBundle->method('getPath')->willReturn($bundlePath);
             $currentBundle->method('getName')->willReturn($bundle);
             $kernelBundles[$bundle] = $currentBundle;
