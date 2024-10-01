@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 class RenderListenerTest extends ContaoTestCase
 {
@@ -71,6 +72,7 @@ class RenderListenerTest extends ContaoTestCase
         }
 
         $templateRenderer = $parameters['templateRenderer'] ?? $this->createMock(TwigTemplateRenderer::class);
+        $parameters['twig'] = $parameters['twig'] ?? $this->createMock(Environment::class);
 
         if ($mockBuilder) {
             $instance = $mockBuilder->setConstructorArgs([
@@ -82,6 +84,7 @@ class RenderListenerTest extends ContaoTestCase
                 $parameters['normalizer'],
                 $parameters['bundleConfig'],
                 $templateRenderer,
+                $parameters['twig'],
             ])->getMock();
         } else {
             $instance = new RenderListener(
@@ -92,7 +95,8 @@ class RenderListenerTest extends ContaoTestCase
                 $parameters['scopeMatcher'],
                 $parameters['normalizer'],
                 $parameters['bundleConfig'],
-                $templateRenderer
+                $templateRenderer,
+                $parameters['twig']
             );
         }
 
@@ -132,35 +136,58 @@ class RenderListenerTest extends ContaoTestCase
         $instance->render($contaoTemplate);
     }
 
-    public function testOnParseTemplateSkipTemplates()
+    public function testOnParseTemplate()
     {
-        $mockBuilder = $this->getMockBuilder(RenderListener::class)
-            ->setMethods(['prepareContaoTemplate']);
-        $instance = $this->createTestInstance([
-            'bundleConfig' => [
-                'enable_template_loader' => true,
-            ],
-        ], $mockBuilder);
-        $instance->expects($this->once())->method('prepareContaoTemplate');
-        $template = $this->createMock(Template::class);
-        $template->method('getName')->willReturn('template');
-        $instance->onParseTemplate($template);
+        $templateLocator = $this->createMock(TwigTemplateLocator::class);
+        $templateLocator->method('getTemplates')->willReturn(['test' => 'test']);
 
-        $mockBuilder = $this->getMockBuilder(RenderListener::class)
-            ->setMethods(['prepareContaoTemplate']);
+        // Template loader disabled
+        $instance = $this->createTestInstance([
+            'templateLocator' => $templateLocator,
+        ]);
+        $template = $this->mockTemplateObject(FrontendTemplate::class, 'test');
+        $instance->onParseTemplate($template);
+        $this->assertSame('test', $template->getName());
+
+        // Template loader enabled, template is skipped by config
         $instance = $this->createTestInstance([
             'bundleConfig' => [
                 'enable_template_loader' => true,
-                'skip_templates' => ['image'],
+                'skip_templates' => ['test'],
             ],
-        ], $mockBuilder);
-        $instance->expects($this->once())->method('prepareContaoTemplate');
-        $template = $this->createMock(Template::class);
-        $template->method('getName')->willReturn('template');
+            'templateLocator' => $templateLocator,
+        ]);
+        $template = $this->mockTemplateObject(FrontendTemplate::class, 'test');
         $instance->onParseTemplate($template);
-        $template = $this->createMock(Template::class);
-        $template->method('getName')->willReturn('image');
+        $this->assertSame('test', $template->getName());
+
+        // Template loader enabled, template is known by contao template engine
+        $loader = $this->createMock(FilesystemLoader::class);
+        $loader->method('exists')->willReturn(true);
+        $twig = $this->createMock(Environment::class);
+        $twig->method('getLoader')->willReturn($loader);
+        $instance = $this->createTestInstance([
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+            ],
+            'twig' => $twig,
+            'templateLocator' => $templateLocator,
+        ]);
+        $template = $this->mockTemplateObject(FrontendTemplate::class, 'test');
         $instance->onParseTemplate($template);
+        $this->assertSame('test', $template->getName());
+
+        // Template loader enabled
+        $instance = $this->createTestInstance([
+            'bundleConfig' => [
+                'enable_template_loader' => true,
+            ],
+            'templateLocator' => $templateLocator,
+        ]);
+
+        $template = $this->mockTemplateObject(FrontendTemplate::class, 'test');
+        $instance->onParseTemplate($template);
+        $this->assertSame('twig_template_proxy', $template->getName());
     }
 
     public function testOnParseWidgetSkipTemplates()

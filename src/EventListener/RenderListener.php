@@ -27,6 +27,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
+use Twig\Environment;
 
 class RenderListener implements ServiceSubscriberInterface
 {
@@ -34,51 +35,24 @@ class RenderListener implements ServiceSubscriberInterface
     public const TWIG_CONTEXT = 'twig_context';
 
     /** @var string[] */
-    protected $templates = [];
-    /**
-     * @var TwigTemplateLocator
-     */
-    protected $templateLocator;
-    /**
-     * @var string
-     */
-    protected $rootDir;
-    /**
-     * @var EventDispatcherInterface
-     */
-    protected $eventDispatcher;
-    /**
-     * @var KernelInterface
-     */
-    protected $kernel;
-    /**
-     * @var RequestStack
-     */
-    protected $requestStack;
-    /**
-     * @var ScopeMatcher
-     */
-    protected $scopeMatcher;
-    /**
-     * @var NormalizerHelper
-     */
-    protected $normalizer;
-    /**
-     * @var array
-     */
-    protected $bundleConfig;
-    /**
-     * @var bool
-     */
-    protected $enableTemplateLoader = false;
-
+    protected array $templates = [];
+    protected TwigTemplateLocator $templateLocator;
+    protected string $rootDir;
+    protected EventDispatcherInterface $eventDispatcher;
+    protected KernelInterface $kernel;
+    protected RequestStack $requestStack;
+    protected ScopeMatcher $scopeMatcher;
+    protected NormalizerHelper $normalizer;
+    protected array $bundleConfig;
+    protected bool $enableTemplateLoader = false;
     protected TwigTemplateRenderer $twigTemplateRenderer;
     private ContainerInterface $container;
+    private Environment $twig;
 
     /**
      * RenderListener constructor.
      */
-    public function __construct(ContainerInterface $container, TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer)
+    public function __construct(ContainerInterface $container, TwigTemplateLocator $templateLocator, EventDispatcherInterface $eventDispatcher, RequestStack $requestStack, ScopeMatcher $scopeMatcher, NormalizerHelper $normalizer, array $bundleConfig, TwigTemplateRenderer $twigTemplateRenderer, Environment $twig)
     {
         $this->templateLocator = $templateLocator;
         $this->eventDispatcher = $eventDispatcher;
@@ -92,6 +66,7 @@ class RenderListener implements ServiceSubscriberInterface
             $this->enableTemplateLoader = true;
         }
         $this->container = $container;
+        $this->twig = $twig;
     }
 
     /**
@@ -256,15 +231,18 @@ class RenderListener implements ServiceSubscriberInterface
     }
 
     /**
-     * Check if the template is in the skipped template list.
+     * Check if the template should be skipped
      */
     protected function isSkippedTemplate(string $template): bool
     {
-        if (!isset($this->bundleConfig['skip_templates']) || empty($this->bundleConfig['skip_templates'])) {
-            return false;
+        // skip template loaded by contao twig engine
+        $templateCandidate = "@Contao/$template.html.twig";
+        if ($this->twig->getLoader()->exists($templateCandidate))
+        {
+            return true;
         }
 
-        return \in_array($template, $this->bundleConfig['skip_templates']);
+        return \in_array($template, $this->bundleConfig['skip_templates'] ?? []);
     }
 
     private function getTemplates(): array

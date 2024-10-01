@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.3] - 2024-10-01
+- Fixed: do not process templates already based on twig
+
 ## [1.8.2] - 2024-10-01
 - Fixed: issues with different bundle structures
 
