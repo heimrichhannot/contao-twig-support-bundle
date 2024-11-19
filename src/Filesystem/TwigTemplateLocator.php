@@ -137,6 +137,14 @@ class TwigTemplateLocator
             $key--;
         }
 
+        // fallback for templates in theme folders, when no "global" template is found
+        if ($this->scopeMatcher->isBackendRequest($this->requestStack->getCurrentRequest())) {
+            $key = array_key_last($template['paths']);
+            while (isset($template['paths'][$key])) {
+                return new TemplateContext($templateName, $template['paths'][$key], $template['pathInfo'][$template['paths'][$key]]);
+            }
+        }
+
         throw new TemplateNotFoundException(sprintf('Unable to find template "%s".', $templateName));
     }
 
