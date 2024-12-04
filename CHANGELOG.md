@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.5] - 2024-12-04
+- Fixed: do not initialize contao framework at cache warmup
+
 ## [1.8.4] - 2024-11-19
 - Fixed: do not throw an exception in backend if templates only exists in theme folder
 

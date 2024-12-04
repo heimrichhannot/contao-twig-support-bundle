@@ -8,7 +8,6 @@
 
 namespace HeimrichHannot\TwigSupportBundle\Cache;
 
-use Contao\CoreBundle\Framework\ContaoFramework;
 use HeimrichHannot\TwigSupportBundle\Filesystem\TwigTemplateLocator;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpKernel\CacheClearer\CacheClearerInterface;
@@ -22,27 +21,20 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
 
     protected TwigTemplateLocator $templateLocator;
     protected FilesystemAdapter $templateCache;
-    private ContaoFramework $contaoFramework;
 
-    /**
-     * TemplateCacheWarmer constructor.
-     */
-    public function __construct(TwigTemplateLocator $templateLocator, FilesystemAdapter $templateCache, ContaoFramework $contaoFramework)
+    public function __construct(TwigTemplateLocator $templateLocator, FilesystemAdapter $templateCache)
     {
         $this->templateLocator = $templateLocator;
         $this->templateCache = $templateCache;
-        $this->contaoFramework = $contaoFramework;
     }
 
-    public function isOptional()
+    public function isOptional(): bool
     {
         return true;
     }
 
-    public function warmUp($cacheDir): void
+    public function warmUp($cacheDir): array
     {
-        $this->contaoFramework->initialize();
-
         $this->templateCache->save(
             $this->templateCache
                 ->getItem(static::TEMPLATES_WITH_EXTENSION_CACHE_KEY)
@@ -53,6 +45,8 @@ class TemplateCache implements CacheWarmerInterface, CacheClearerInterface
                 ->getItem(static::TEMPLATES_WITHOUT_EXTENSION_CACHE_KEY)
                 ->set($this->templateLocator->getTemplates(false, true))
         );
+
+        return [];
     }
 
     public function clear($cacheDir): void
